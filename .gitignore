@@ -2,7 +2,6 @@
 bin/
 /db
 .eclipse
-/lib/
 /logs/
 /modules
 /project/project
@@ -15,3 +14,5 @@ server.pid
 *.eml
 /dist/
 .cache
+.prefs
+
