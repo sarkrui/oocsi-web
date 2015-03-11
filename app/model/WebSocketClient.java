@@ -47,13 +47,15 @@ public class WebSocketClient extends Client {
 						// on first message --> set the name
 						if (token == null || token.length() == 0) {
 							token = event;
+							outputStream = out;
+
+							// check for existing client
 							if (server.addClient(WebSocketClient.this)) {
 								Logger.info("WS client " + token + " connected");
-
-								out.write("Welcome " + token);
-								outputStream = out;
+								status(200, "Welcome " + token);
 							} else {
-								out.write("ERROR: client exists already");
+								Logger.info("WS client " + token + " rejected as existing");
+								status(401, "ERROR: client exists already");
 								out.close();
 							}
 
@@ -98,6 +100,13 @@ public class WebSocketClient extends Client {
 		if (outputStream != null) {
 			outputStream.write(toJson(message));
 		}
+	}
+
+	public void status(int code, String message) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("code", code);
+		map.put("status", message);
+		send(new Message("server", token, new Date(), map));
 	}
 
 	/**
