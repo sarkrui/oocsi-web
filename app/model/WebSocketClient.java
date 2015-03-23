@@ -98,7 +98,11 @@ public class WebSocketClient extends Client {
 	@Override
 	public void send(Message message) {
 		if (outputStream != null) {
-			outputStream.write(toJson(message));
+			try {
+				outputStream.write(toJson(message));
+			} catch (Exception e) {
+				// problem writing: ignore
+			}
 		}
 	}
 

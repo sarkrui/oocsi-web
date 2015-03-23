@@ -5,8 +5,10 @@ var OOCSI = (function() {
 	var handlers = {};
 	var websocket;
 	var connected = false;
+	var logger = internalLog;
 
 	function init() {
+		logger("CONNECTING to "  + wsUri);
 		websocket = new WebSocket(wsUri);
 		websocket.onopen = function(evt) {
 			onOpen(evt)
@@ -27,11 +29,11 @@ var OOCSI = (function() {
 			submit(username);
 			connected = true;
 		}	 
-		log("CONNECTED");
+		logger("CONNECTED");
 	}
 
 	function onClose(evt) {
-		log("DISCONNECTED");
+		logger("DISCONNECTED");
 	}
 
 	function onMessage(evt) {
@@ -40,17 +42,25 @@ var OOCSI = (function() {
 			if(handlers[e.recipient] !== undefined) {
 				handlers[e.recipient](e);
 			} else {
-				log('no handler for event: ' + evt.data);
+				logger('no handler for event: ' + evt.data);
 			}
 		} catch(e) {
-			log('parse exception for event: ' + evt.data);
+			logger('parse exception for event: ' + evt.data);
 		}
-		log('RESPONSE: ' + evt.data);
+		logger('RESPONSE: ' + evt.data);
 	}
 
 	function onError(evt) {
-		log('ERROR: ' + evt.data);
+		logger('ERROR: ' + evt.data);
 	}
+
+	function waitForSocket(fn) {
+		if(!websocket || websocket.readyState == WebSocket.CONNECTING) {
+			setTimeout(function() { waitForSocket(fn) }, 200);
+		} else {
+			fn();
+		}
+	} 
 
 	function internalClose() {
 		websocket && websocket.close();
@@ -58,12 +68,12 @@ var OOCSI = (function() {
 
 	function submit(message) {
 		if(websocket && websocket.send(message)) {
-			log("SENT: " + message);	
+			logger("SENT: " + message);	
 		}
 	}
 
-	function log(message) {
-		console.log(message);
+	function internalLog(message) {
+		// do nothing by default
 	}
 
 	function internalSend(client, data) {
@@ -87,24 +97,33 @@ var OOCSI = (function() {
 	return {
 		connect: function(server, clientName, fn) {
 			wsUri = server;
-			username = clientName;
+			username = clientName && clientName.length > 0 ? clientName : "webclient_" + +(new Date());
 			handlers[clientName] = fn;
-			init()
+			init();
 		},
 		send: function(recipient, data) {
-			internalSend(recipient, data);
+			internalSend(recipient, data);	
 		},
 		subscribe: function(channel, fn) {
-			internalSubscribe(channel, fn);
+			waitForSocket(function() {
+				internalSubscribe(channel, fn);
+			});
 		},
 		unsubscribe: function(channel) {
-			internalUnsubscribe(channel);
+			waitForSocket(function() {
+				internalUnsubscribe(channel);
+			});
 		},
 		close: function() {
-			internalClose();
+			waitForSocket(function() {
+				internalClose();
+			});
 		},
 		handlers: function() {
 			return handlers;
+		},
+		logger: function(fn) {
+			logger = fn;
 		}
 	};
 
