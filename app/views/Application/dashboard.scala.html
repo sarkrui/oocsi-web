@@ -1,0 +1,102 @@
+@(message: String, title: String) @main("Welcome") { 
+
+
+	<div class="container">
+		<div class="row">
+			<div id="red-channel" class="card-panel col s6">
+				<h2>
+					channel: colorChange, dataSelector: red
+				</h2>
+			</div>
+			<div id="green-channel" class="card-panel col s6">
+				<h2>
+					channel: colorChange, dataSelector: green
+				</h2>
+			</div>
+		</div>
+	</div>
+
+
+
+
+   <script type="text/javascript">
+        	
+		// connect to OOCSI server running on IP and port 9000
+		OOCSI.connect("ws://" + document.domain + ":9000/");
+
+		var charts = [
+			{
+				configuration: {
+					caption: '',
+					channel: '',
+					dataSelector: ''
+				},
+				chartData: [{'date': new Date(), 'value': 0}],
+				chartSpec: {
+					title: "",
+			        //description: "This is a simple line chart. You can remove the area portion by adding area: false to the arguments list.",
+			        data: [],
+			        width: 400,
+			        height: 200,
+			        right: 40,
+			        interpolate: 'linear',
+			        target: document.getElementById('red-channel'),
+			        x_accessor: 'date',
+			        y_accessor: 'value'
+		    	}
+			}
+		];
+
+		// add charts
+		addChart();
+
+	    // supply websockets data source
+        // subscribe to the channel "colorChange"
+	    OOCSI.subscribe("colorChange", function(e) {
+	    
+//	    	console.log(e);
+	    	updateChart(0, e.data.red);
+//	    	updateChart(1, e.data.green);
+//	    	updateChart(2, e.data.blue);
+	    });
+
+    
+	    // add chart function
+	    function addChart() {
+	    	// prepare data
+	    	
+	    	 
+		    updateChart(0, 10);
+		    updateChart(0, 20);
+		    updateChart(0, 30);
+		    updateChart(0, 40);
+    	}
+	    
+	    // chart update function
+		function updateChart(index, data) {
+		
+			var chartData = charts[index].chartData;
+			var chartSpec = charts[index].chartSpec;
+		
+			// add new data
+			chartData.push({'date': new Date(), 'value': data});
+			
+			// truncate data to max length
+			while(chartData.length > 500) {
+				chartData.shift();
+			}
+			
+			// convert?
+	    	//chartSpec.data = MG.convert.date(chartData, 'date');
+	    	
+	    	// update chart
+	    	chartSpec.data = chartData;
+	    	delete chartSpec.xax_format;
+		    MG.data_graphic(chartSpec);		
+		}
+
+	    // add timer to update graphs nonetheless    	
+    	
+    </script>
+
+}
