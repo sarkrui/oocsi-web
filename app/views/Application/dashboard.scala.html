@@ -1,75 +1,152 @@
 @(message: String, title: String) @main("Welcome") { 
 
+    <nav>
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo">OOCSI-web</a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li>
+                    <a href="about">About</a>
+                </li>
+                <li>
+                    <a href="help">Help</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+  
+	<div id="chartsContainer" class="container">
+	</div>
 
 	<div class="container">
 		<div class="row">
-			<div id="red-channel" class="card-panel col s6">
-				<h2>
-					channel: colorChange, dataSelector: red
-				</h2>
-			</div>
-			<div id="green-channel" class="card-panel col s6">
-				<h2>
-					channel: colorChange, dataSelector: green
-				</h2>
-			</div>
+		    <br><br>
+
+	    	<a class="modal-trigger waves-effect waves-light btn" href="#modal1">add a chart</a>
+
+   		    <br><br>
 		</div>
+	     <!-- Modal Structure -->
+	    <div id="modal1" class="modal">
+	        <div class="modal-content">
+	            <h4>
+	                Add a chart
+	            </h4>
+				<div class="row">
+				    <form class="col s12">
+				      <div class="row">
+				        <div class="input-field col s6">
+				          <input placeholder="name of channel" id="channel" type="text" class="validate">
+				          <label for="channel">Channel</label>
+				        </div>
+				        <div class="input-field col s6">
+				          <input placeholder="selector for data in message events" id="selector" type="text" class="validate">
+				          <label for="selector">Data selector</label>
+				        </div>
+				      </div>
+				    </form>
+				  </div>
+		        </div>
+	        <div class="modal-footer">
+	            <a href="#!" class="modal-action modal-close waves-effect waves-red btn-flat">Cancel</a>
+	            <a href="#!" id="addChartBtn" class="modal-action modal-close waves-effect waves-green btn-flat">Add</a>
+	        </div>
+	    </div>
 	</div>
+	
+
+	<script type="text/javascript">
 
 
+	   	// add add
+	   	$(document).ready(function(){
+    		// the "href" attribute of .modal-trigger must specify the modal ID that wants to be triggered
+    		$('.modal-trigger').leanModal();
 
+			// connect to OOCSI server running on IP and port 9000
+			OOCSI.connect("ws://" + document.domain + ":9000/");
 
-   <script type="text/javascript">
+			// add charts
+			var json = readCookie('charts');
+			chartLoader = JSON.parse(json);
+			if(json !== undefined && chartLoader.length > 0) {
+				chartLoader.forEach(function(c) {
+					addChart(c.channel, c.selector);
+				});
+			} else {
+				addChart('colorChange', 'red');
+				addChart('colorChange', 'green');
+			}
+  		});
         	
-		// connect to OOCSI server running on IP and port 9000
-		OOCSI.connect("ws://" + document.domain + ":9000/");
+		var charts = [];
+		var channels = {};
+    
+	    // add chart function
+	    function addChart(channel, selector) {
 
-		var charts = [
-			{
+	    	// prepare chart
+	    	var newChart = {
 				configuration: {
 					caption: '',
 					channel: '',
-					dataSelector: ''
+					selector: ''
 				},
 				chartData: [{'date': new Date(), 'value': 0}],
 				chartSpec: {
 					title: "",
 			        //description: "This is a simple line chart. You can remove the area portion by adding area: false to the arguments list.",
 			        data: [],
-			        width: 400,
+			        width: 800,
 			        height: 200,
 			        right: 40,
 			        interpolate: 'linear',
+			        transition_on_update: false,
 			        target: document.getElementById('red-channel'),
 			        x_accessor: 'date',
 			        y_accessor: 'value'
 		    	}
+			};
+
+			// set configuration
+			newChart.configuration.channel = channel;
+			newChart.configuration.selector = selector;
+
+			var row = d3.select('#chartsContainer')
+				.append('div').attr('id', 'container' + (charts.length + 1)).classed('row', true);
+			row = row.append('div').classed('card-panel', true);
+			row.append('div').classed('col s6', true).html(channel + ': ' + selector + ' <a href="#" id="removeChartBtn' + (charts.length + 1) + '">remove</a>');
+			row.append('div').attr('id', 'chart' + (charts.length + 1)).classed('col s12', true);
+			row.append('div').style('clear', 'both');
+
+			newChart.chartSpec.target = document.getElementById('chart' + (charts.length + 1));
+
+			var index = charts.length + 1;
+			$('#removeChartBtn' + index).click(function() {
+				removeChart(index);
+			});
+
+			charts.push(newChart);
+
+			// check for channel
+			if(channels[channel] === undefined) {
+				channels[channel] = [{selector: selector, index: charts.length - 1}];
+
+			    OOCSI.subscribe(channel, function(e) {
+					{
+				    	for (var i = 0; i < channels[channel].length; i++) {
+				    		var selector = channels[channel][i];
+				    		var value = eval('e.data.' + selector.selector);
+					    	updateChart(selector.index, value);
+				    	};
+					}
+			    });
+			} else {
+				channels[channel].push({selector: selector, index: charts.length - 1});
 			}
-		];
 
-		// add charts
-		addChart();
+	    	updateChart(charts.length - 1, 0);
 
-	    // supply websockets data source
-        // subscribe to the channel "colorChange"
-	    OOCSI.subscribe("colorChange", function(e) {
-	    
-//	    	console.log(e);
-	    	updateChart(0, e.data.red);
-//	    	updateChart(1, e.data.green);
-//	    	updateChart(2, e.data.blue);
-	    });
-
-    
-	    // add chart function
-	    function addChart() {
-	    	// prepare data
-	    	
-	    	 
-		    updateChart(0, 10);
-		    updateChart(0, 20);
-		    updateChart(0, 30);
-		    updateChart(0, 40);
+	    	createCookie('charts', JSON.stringify(charts.map(function(d) {return d.configuration}).filter(function(d) {return d !== undefined})), 1);
     	}
 	    
 	    // chart update function
@@ -92,11 +169,69 @@
 	    	// update chart
 	    	chartSpec.data = chartData;
 	    	delete chartSpec.xax_format;
-		    MG.data_graphic(chartSpec);		
+		    MG.data_graphic(chartSpec);
 		}
 
-	    // add timer to update graphs nonetheless    	
+		function removeChart(chart) {
+			$('#container' + chart).remove();
+
+			var c = charts[chart - 1];
+			for (var i = channels[c.configuration.channel].length - 1; i >= 0; i--) {
+				if(channels[c.configuration.channel][i].index == (chart-1)) {
+					channels[c.configuration.channel].splice(i, 1);
+					break;
+				}
+			};
+
+			delete(c.configuration);
+	    	createCookie('charts', JSON.stringify(charts.map(function(d) {return d.configuration}).filter(function(d) {return d !== undefined})), 1);
+
+			if(channels[c.configuration.channel].length == 0) {
+				OOCSI.unsubscribe(c.configuration.channel);
+				delete(channels[c.configuration.channel]);
+			}
+		}
+
+	   	$('#addChartBtn').click(function(e) {
+	   		var channel = $('#channel').val();
+	   		var selector = $('#selector').val();
+
+	   		addChart(channel, selector);
+
+	   		$('#channel').val('');
+	   		$('#selector').val('');	   		
+	   	});
+
     	
-    </script>
+		function createCookie(name, value, days) {
+		    var expires;
+
+		    if (days) {
+		        var date = new Date();
+		        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+		        expires = "; expires=" + date.toGMTString();
+		    } else {
+		        expires = "";
+		    }
+		    document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=/";
+		}
+
+		function readCookie(name) {
+		    var nameEQ = encodeURIComponent(name) + "=";
+		    var ca = document.cookie.split(';');
+		    for (var i = 0; i < ca.length; i++) {
+		        var c = ca[i];
+		        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+		        if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+		    }
+		    return null;
+		}
+
+		function eraseCookie(name) {
+		    createCookie(name, "", -1);
+		}
+
+
+	</script>
 
 }
