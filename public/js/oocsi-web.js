@@ -44,6 +44,7 @@ var OOCSI = (function() {
 			} else {
 				logger('no handler for event: ' + evt.data);
 			}
+			websocket.send(".");
 		} catch(e) {
 			logger('parse exception for event: ' + evt.data);
 		}

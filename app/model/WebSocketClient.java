@@ -114,8 +114,7 @@ public class WebSocketClient extends Client {
 	}
 
 	/**
-	 * internal message parsing (will ignore all except for sendjson, subscribe,
-	 * and unsubscribe)
+	 * internal message parsing (will ignore all except for sendjson, subscribe, and unsubscribe)
 	 * 
 	 * @param inputLine
 	 */
@@ -175,6 +174,9 @@ public class WebSocketClient extends Client {
 		} else {
 			// ignore all other messages, do nothing
 		}
+
+		// update last action
+		lastAction = System.currentTimeMillis();
 	}
 
 	private String toJson(Message m) {
@@ -185,5 +187,16 @@ public class WebSocketClient extends Client {
 		jo.add("data", GSON.toJsonTree(m.data));
 
 		return jo.toString();
+	}
+
+	@Override
+	public void ping() {
+		if (outputStream != null) {
+			try {
+				outputStream.write("ping");
+			} catch (Exception e) {
+				// problem writing: ignore
+			}
+		}
 	}
 }
