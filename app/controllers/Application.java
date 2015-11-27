@@ -16,17 +16,6 @@ public class Application extends Controller {
 	public WebSocket<String> index() {
 		WebSocketClient wsc = new WebSocketClient(getServer(), request().remoteAddress());
 		return wsc.getHandler();
-
-		// return WebSocket.whenReady((in, out) -> {
-		// // For each event received on the socket,
-		// in.onMessage(System.out::println);
-		//
-		// // When the socket is closed.
-		// in.onClose(() -> System.out.println("Disconnected"));
-		//
-		// // Send a single 'Hello!' message
-		// out.write("Hello!");
-		// });
 	}
 
 	public Result dashboard() {
@@ -36,7 +25,7 @@ public class Application extends Controller {
 	private static OOCSIServer getServer() {
 		if (server == null) {
 			try {
-				server = new OOCSIServer(4444, 1000, false) {
+				server = new OOCSIServer(4444, 1000, true) {
 					@Override
 					protected void internalLog(String message) {
 						Logger.info(message);

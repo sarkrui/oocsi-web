@@ -73,6 +73,7 @@ public class WebSocketClient extends Client {
 				// When the socket is closed.
 				in.onClose(new Callback0() {
 					public void invoke() {
+						disconnect();
 						Logger.info("WS client " + token + " disconnected");
 					}
 				});
