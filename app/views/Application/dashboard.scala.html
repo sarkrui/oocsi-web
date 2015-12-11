@@ -156,7 +156,11 @@
 			var chartSpec = charts[index].chartSpec;
 		
 			// add new data
-			chartData.push({'date': new Date(), 'value': data});
+			if(!isNaN(data)) {
+				chartData.push({'date': new Date(), 'value': data});
+			} else {
+				chartData.push({'date': new Date(), 'value': 0});
+			}
 			
 			// truncate data to max length
 			while(chartData.length > 500) {
