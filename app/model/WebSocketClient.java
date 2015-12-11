@@ -89,6 +89,7 @@ public class WebSocketClient extends Client {
 			outputStream.close();
 			outputStream = null;
 		}
+		server.removeClient(this);
 	}
 
 	@Override
