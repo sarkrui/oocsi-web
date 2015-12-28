@@ -170,9 +170,11 @@
 			if(!isNaN(data)) {
 				chartData.push({'date': new Date(), 'value': data});
 				$('#container_currVal'+(index+1)).text(data);
+				$('#chart'+(index+1)).show();
 			} else {
 				chartData.push({'date': new Date(), 'value': 0});
 				$('#container_currVal'+(index+1)).text('"' + data + '"');
+				$('#chart'+(index+1)).hide();
 			}
 			
 			// truncate data to max length
