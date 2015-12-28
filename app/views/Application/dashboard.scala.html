@@ -42,6 +42,16 @@
 				          <input placeholder="selector for data in message events" id="selector" type="text" class="validate">
 				          <label for="selector">Data selector</label>
 				        </div>
+				        @*
+						<p>
+					      <input name="eventtype" type="radio" id="generic" />
+					      <label for="generic">Generic</label>
+					    </p>
+					    <p>
+					      <input name="eventtype" type="radio" id="numeric" />
+					      <label for="numeric">Numeric</label>
+					    </p>
+					    *@
 				      </div>
 				    </form>
 				  </div>
@@ -68,7 +78,7 @@
 			// add charts
 			var json = readCookie('charts');
 			chartLoader = JSON.parse(json);
-			if(json !== undefined && chartLoader.length > 0) {
+			if(chartLoader !== undefined && chartLoader.length > 0) {
 				chartLoader.forEach(function(c) {
 					addChart(c.channel, c.selector);
 				});
@@ -114,7 +124,8 @@
 			var row = d3.select('#chartsContainer')
 				.append('div').attr('id', 'container' + (charts.length + 1)).classed('row', true);
 			row = row.append('div').classed('card-panel', true);
-			row.append('div').classed('col s6', true).html(channel + ': ' + selector + ' <a href="#" id="removeChartBtn' + (charts.length + 1) + '">remove</a>');
+			row.append('div').classed('col s12', true).html(channel + ': ' + selector + ' <a href="#" id="removeChartBtn' + (charts.length + 1) + '">remove</a>');
+			row.append('div').classed('col s12', true).style('font-weight', 100).html('current value: ').append('span').attr('id', 'container_currVal' + (charts.length + 1));			
 			row.append('div').attr('id', 'chart' + (charts.length + 1)).classed('col s12', true);
 			row.append('div').style('clear', 'both');
 
@@ -158,8 +169,10 @@
 			// add new data
 			if(!isNaN(data)) {
 				chartData.push({'date': new Date(), 'value': data});
+				$('#container_currVal'+(index+1)).text(data);
 			} else {
 				chartData.push({'date': new Date(), 'value': 0});
+				$('#container_currVal'+(index+1)).text('"' + data + '"');
 			}
 			
 			// truncate data to max length

@@ -37,6 +37,7 @@ var OOCSI = (function() {
 	}
 
 	function onMessage(evt) {
+		websocket.send(".");
 		try {
 			var e = JSON.parse(evt.data);
 			if(handlers[e.recipient] !== undefined) {
@@ -44,7 +45,6 @@ var OOCSI = (function() {
 			} else {
 				logger('no handler for event: ' + evt.data);
 			}
-			websocket.send(".");
 		} catch(e) {
 			logger('parse exception for event: ' + evt.data);
 		}
