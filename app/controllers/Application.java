@@ -11,7 +11,7 @@ import play.mvc.WebSocket;
 
 public class Application extends Controller {
 
-	private static OOCSIServer server = null;
+	private static OOCSIServer server = getServer();
 
 	public WebSocket<String> index() {
 		WebSocketClient wsc = new WebSocketClient(getServer(), request().remoteAddress());
