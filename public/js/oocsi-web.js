@@ -38,6 +38,13 @@ var OOCSI = (function() {
 
 	function onMessage(evt) {
 		websocket.send(".");
+
+		// ignore pings
+		if(evt.data == "ping") {
+			return;
+		}
+
+		// parse message
 		try {
 			var e = JSON.parse(evt.data);
 			if(handlers[e.recipient] !== undefined) {
@@ -78,7 +85,7 @@ var OOCSI = (function() {
 	}
 
 	function internalSend(client, data) {
-		connected && submit('sendjson ' + client + ' '+ JSON.stringify(data));
+		connected && submit('sendjson ' + client + ' '+ JSON.stringify((typeof(data) == 'string' ? {message: data} : data)));
 	} 
 
 	function internalSubscribe(channel, fn) {
