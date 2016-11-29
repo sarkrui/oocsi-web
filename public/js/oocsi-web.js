@@ -82,7 +82,7 @@ var OOCSI = (function() {
                 websocket.send(message)
                 logger("SENT: " + message);
             } catch (e) {
-                console.log(e.message, e.name);
+                logger("wasn't able to send message: ", e.message, e.name);
             }
         }
     }
