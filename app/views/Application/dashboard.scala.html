@@ -1,4 +1,6 @@
-@(message: String, title: String) @main("Welcome") { 
+@(message: String, title: String, address: String) 
+
+@main("Welcome") { 
 
     <nav>
         <div class="nav-wrapper">
@@ -72,13 +74,13 @@
     		// the "href" attribute of .modal-trigger must specify the modal ID that wants to be triggered
     		$('.modal-trigger').leanModal();
 
-			// connect to OOCSI server running on IP and port 9000
-			OOCSI.connect("ws://" + document.domain + ":9000/");
+			// connect to OOCSI server
+			OOCSI.connect("ws://@address");
 
 			// add charts
 			var json = readCookie('charts');
 			chartLoader = JSON.parse(json);
-			if(chartLoader !== undefined && chartLoader.length > 0) {
+			if(chartLoader !== null && chartLoader !== undefined && chartLoader.length > 0) {
 				chartLoader.forEach(function(c) {
 					addChart(c.channel, c.selector);
 				});

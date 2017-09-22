@@ -6,105 +6,38 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import controllers.actors.WebSocketClientActor;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
 import play.Logger;
-import play.libs.F.Callback;
-import play.libs.F.Callback0;
 import play.libs.Json;
-import play.mvc.WebSocket;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 public class WebSocketClient extends Client {
 
 	private static final Gson GSON = new Gson();
 
-	OOCSIServer server;
-	String address;
-	WebSocket<String> websocket;
-	play.mvc.WebSocket.Out<String> outputStream;
+	private OOCSIServer server;
+	private WebSocketClientActor output;
 
-	public WebSocketClient(OOCSIServer server, String ipAddress) {
-		super("");
+	public WebSocketClient(String token, OOCSIServer server, WebSocketClientActor out) {
+		super(token);
 
 		this.server = server;
-		this.address = ipAddress;
-	}
-
-	public WebSocket<String> getHandler() {
-		websocket = new WebSocket<String>() {
-			public void onReady(play.mvc.WebSocket.In<String> in, final play.mvc.WebSocket.Out<String> out) {
-				// For each event received on the socket,
-				in.onMessage(new Callback<String>() {
-					public void invoke(String event) {
-
-						// on first message --> set the name
-						if (token == null || token.length() == 0) {
-							token = event;
-							outputStream = out;
-
-							// check for existing client
-							if (server.addClient(WebSocketClient.this)) {
-								Logger.info("WS client " + token + " connected");
-								status(200, "Welcome " + token);
-							} else {
-								Logger.info("WS client " + token + " rejected as existing");
-								status(401, "ERROR: client exists already");
-								out.close();
-							}
-
-							return;
-						}
-
-						// anything useful?
-						parseMessage(event);
-
-						// // log events to the console
-						// Logger.info(event);
-					}
-				});
-
-				// When the socket is closed.
-				in.onClose(new Callback0() {
-					public void invoke() {
-						disconnect();
-						Logger.info("WS client " + token + " disconnected");
-					}
-				});
-			}
-		};
-
-		return websocket;
-	}
-
-	@Override
-	public void disconnect() {
-		if (outputStream != null) {
-			outputStream.close();
-			outputStream = null;
-		}
-		server.removeClient(this);
-	}
-
-	@Override
-	public boolean isConnected() {
-		return outputStream != null;
+		this.output = out;
 	}
 
 	@Override
 	public void send(Message message) {
-		if (outputStream != null) {
-			try {
-				outputStream.write(toJson(message));
-			} catch (Exception e) {
-				// problem writing: ignore
-			}
+		if (output != null) {
+			output.tell(toJson(message));
 		}
 	}
 
@@ -113,6 +46,15 @@ public class WebSocketClient extends Client {
 		map.put("code", code);
 		map.put("status", message);
 		send(new Message("server", token, new Date(), map));
+	}
+
+	/**
+	 * forward message to internal OOCSI server
+	 * 
+	 * @param message
+	 */
+	public void message(String message) {
+		parseMessage(message);
 	}
 
 	/**
@@ -151,13 +93,16 @@ public class WebSocketClient extends Client {
 								} else if (val.isObject()) {
 									ObjectNode object = (ObjectNode) val;
 									map.put(entry.getKey(), object.toString());
+								} else if (val.isArray()) {
+									ArrayNode array = (ArrayNode) val;
+									map.put(entry.getKey(), array.toString());
 								}
 							}
 							c.send(new Message(token, recipient, new Date(), map));
 						}
 					}
 				} catch (Exception e) {
-					outputStream.write("ERROR: parse exception");
+					// outputStream.write("ERROR: parse exception");
 					Logger.warn("JSON parse exception");
 				}
 			}
@@ -181,6 +126,24 @@ public class WebSocketClient extends Client {
 		lastAction = System.currentTimeMillis();
 	}
 
+	@Override
+	public void ping() {
+		if (output != null) {
+			output.tell("ping");
+		}
+	}
+
+	@Override
+	public boolean isConnected() {
+		return true;
+	}
+
+	@Override
+	public void disconnect() {
+		output.kill();
+		server.removeClient(this);
+	}
+
 	private String toJson(Message m) {
 		JsonObject jo = new JsonObject();
 		jo.addProperty("sender", m.sender);
@@ -189,16 +152,5 @@ public class WebSocketClient extends Client {
 		jo.add("data", GSON.toJsonTree(m.data));
 
 		return jo.toString();
-	}
-
-	@Override
-	public void ping() {
-		if (outputStream != null) {
-			try {
-				outputStream.write("ping");
-			} catch (Exception e) {
-				// problem writing: ignore
-			}
-		}
 	}
 }
