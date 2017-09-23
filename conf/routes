@@ -6,11 +6,12 @@
 GET		/							controllers.Application.index()
 GET		/ws							controllers.Application.index()
 GET 	/dashboard					controllers.Application.dashboard()
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+# do services last
 GET 	/:service					controllers.Application.serviceIndex(service)
 GET 	/:service/					controllers.Application.serviceIndex(service)
 GET		/:service/:call				controllers.Application.serviceCall(service, call, data: String ?= "")
 GET		/:service/:call/:data		controllers.Application.serviceCall(service, call, data)
-
-
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

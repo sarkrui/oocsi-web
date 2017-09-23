@@ -12,7 +12,9 @@ import controllers.actors.ServerClientActor;
 import controllers.actors.WebSocketClientActor;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.protocol.Message;
+import play.Play;
 import play.mvc.Controller;
 import play.mvc.LegacyWebSocket;
 import play.mvc.Result;
@@ -35,11 +37,14 @@ public class Application extends Controller {
 	}
 
 	public CompletionStage<Result> serviceIndex(String service) {
-		return CompletableFuture.completedFuture(ok(service));
+		if (Play.application().injector().instanceOf(OOCSIServer.class).getClient(service) != null) {
+			return CompletableFuture.completedFuture(ok(service + " ok"));
+		} else {
+			return CompletableFuture.completedFuture(notFound(service + " not found"));
+		}
 	}
 
 	public CompletionStage<Result> serviceCall(String service, String call, String data) {
-
 		ActorRef a = system.actorOf(ServerClientActor.props());
 
 		CompletionStage<Result> prom = FutureConverters
@@ -60,22 +65,9 @@ public class Application extends Controller {
 						else
 							return ok();
 					}
-				}).exceptionally(e -> notFound("service not found"));
+				}).exceptionally(e -> notFound(service + " not found"));
 		return prom;
-
-		// CompletionStage<Result> promiseOfInt = CompletableFuture.supplyAsync(() -> intensiveComputation());
-		// return CompletableFuture.completedFuture(ok(service + call));
 	}
-
-	// private Result intensiveComputation() {
-	// try {
-	// Thread.sleep(2000);
-	// } catch (InterruptedException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// return ok();
-	// }
 
 	public Result dashboard() {
 		return ok(views.html.Application.dashboard.render("title", "content", request().host() + "/ws"));

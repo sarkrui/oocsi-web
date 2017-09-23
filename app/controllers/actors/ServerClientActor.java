@@ -27,9 +27,9 @@ public class ServerClientActor extends UntypedActor {
 			if (c1 != null) {
 				Message m = new Message(c.getName(), request.service);
 				m.addData("webcall", request.call);
-				m.addData("_MESSAGE_HANDLE", request.call);
 				m.addData("webcall_data", request.data);
-				m.addData("_MESSAGE_ID", c.getName());
+				// m.addData("_MESSAGE_HANDLE", request.call);
+				// m.addData("_MESSAGE_ID", c.getName());
 				c1.send(m);
 
 				int i = 0;
@@ -37,7 +37,9 @@ public class ServerClientActor extends UntypedActor {
 					i++;
 					Thread.sleep(500);
 				}
-				sender().tell(c.completedMessage, self());
+				if (c.completedMessage != null) {
+					sender().tell(c.completedMessage, self());
+				}
 			}
 		}
 	}
