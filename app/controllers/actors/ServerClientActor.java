@@ -1,44 +1,66 @@
 package controllers.actors;
 
+import java.util.Map;
+
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
+import nl.tue.id.oocsi.server.protocol.Protocol;
 import play.Play;
 
 @SuppressWarnings("deprecation")
 public class ServerClientActor extends UntypedActor {
 
+	private static final String MESSAGE_HANDLE = "_MESSAGE_HANDLE";
+	private static final String WEBCALL_DATA = "webcall_data";
+	private static final String WEBCALL_ACTION = "webcall";
+
 	public static Props props() {
 		return Props.create(ServerClientActor.class);
 	}
 
-	private final ServerClient c = new ServerClient();
+	private final ServerClient requestClient = new ServerClient();
 	private OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
 
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if (message instanceof OOCSIHTTPRequest) {
 			OOCSIHTTPRequest request = (OOCSIHTTPRequest) message;
-			server.addClient(c);
-			Channel c1 = server.getChannel(request.service);
-			if (c1 != null) {
-				Message m = new Message(c.getName(), request.service);
-				m.addData("webcall", request.call);
-				m.addData("webcall_data", request.data);
-				// m.addData("_MESSAGE_HANDLE", request.call);
-				// m.addData("_MESSAGE_ID", c.getName());
-				c1.send(m);
+			server.addClient(requestClient);
+			Channel serviceClient = server.getChannel(request.service);
+			if (serviceClient != null) {
+				Message serviceMessage = new Message(requestClient.getName(), request.service);
+
+				// try to parse the webcall_data
+				if (request.data != null && request.data.length() > 0) {
+					Map<String, Object> map = Protocol.parseJSONMessage(request.data);
+					// if data could be parsed, use it directly
+					if (map.size() > 0) {
+						serviceMessage.data = map;
+					}
+					// include data verbatim if cannot be parsed as JSON
+					else {
+						serviceMessage.addData(WEBCALL_DATA, map);
+					}
+					serviceMessage.addData(WEBCALL_ACTION, request.call);
+				}
+
+				// add message handle
+				serviceMessage.addData(MESSAGE_HANDLE, request.service);
+
+				// send out to responder
+				serviceClient.send(serviceMessage);
 
 				int i = 0;
-				while (!c.completed() && i < 5) {
+				while (!requestClient.completed() && i < 5) {
 					i++;
 					Thread.sleep(500);
 				}
-				if (c.completedMessage != null) {
-					sender().tell(c.completedMessage, self());
+				if (requestClient.completedMessage != null) {
+					sender().tell(requestClient.completedMessage, self());
 				}
 			}
 		}
@@ -46,7 +68,7 @@ public class ServerClientActor extends UntypedActor {
 
 	@Override
 	public void postStop() throws Exception {
-		server.removeClient(c);
+		server.removeClient(requestClient);
 
 		super.postStop();
 	}

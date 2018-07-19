@@ -37,7 +37,7 @@ public class Application extends Controller {
 	}
 
 	public CompletionStage<Result> serviceIndex(String service) {
-		if (Play.application().injector().instanceOf(OOCSIServer.class).getClient(service) != null) {
+		if (Play.application().injector().instanceOf(OOCSIServer.class).getChannel(service) != null) {
 			return CompletableFuture.completedFuture(ok(service + " ok"));
 		} else {
 			return CompletableFuture.completedFuture(notFound(service + " not found"));
@@ -45,8 +45,23 @@ public class Application extends Controller {
 	}
 
 	public CompletionStage<Result> serviceCall(String service, String call, String data) {
-		ActorRef a = system.actorOf(ServerClientActor.props());
+		return internalServiceCall(service, call, data);
+	}
 
+	public CompletionStage<Result> serviceCallPost(String service, String call) {
+		return internalServiceCall(service, call, request().body().asText());
+	}
+
+	/**
+	 * internal dispatch for the incoming calls
+	 * 
+	 * @param service
+	 * @param call
+	 * @param data
+	 * @return
+	 */
+	private CompletionStage<Result> internalServiceCall(String service, String call, String data) {
+		ActorRef a = system.actorOf(ServerClientActor.props());
 		CompletionStage<Result> prom = FutureConverters
 				.toJava(ask(a, new ServerClientActor.OOCSIHTTPRequest(service, call, data), 2000))
 				.thenApply(response -> {
@@ -55,7 +70,11 @@ public class Application extends Controller {
 					} else {
 						Map<String, Object> messageData = ((Message) response).data;
 						if (messageData.containsKey("html"))
-							return ok((String) messageData.get("html")).as("text/html");
+							return ok((String) messageData.get("html")).as("text/html")
+									.withHeader("Access-Control-Allow-Origin", "*")
+									.withHeader("Access-Control-Allow-Headers", "X-Requested-With")
+									.withHeader("Access-Control-Allow-Headers", "Content-Type")
+									.withHeader("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
 						else if (messageData.containsKey("text"))
 							return ok((String) messageData.get("text")).as("text/plain");
 						else if (messageData.containsKey("json"))
@@ -71,6 +90,10 @@ public class Application extends Controller {
 
 	public Result dashboard() {
 		return ok(views.html.Application.dashboard.render("title", "content", request().host() + "/ws"));
+	}
+
+	public Result test() {
+		return ok(views.html.Application.test.render("title", "content", request().host() + "/ws"));
 	}
 
 }

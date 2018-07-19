@@ -90,8 +90,8 @@
         // setup
         // --------------------------------------------------------------------
 
-        // connect to OOCSI server running on IP and port 9000
-		OOCSI.connect("ws://" + document.domain + ":9000/");
+        // connect to OOCSI server running on IP
+		OOCSI.connect("ws://" + document.domain + "/");
 
         // subscribe to the channel "colorChange"
 	    OOCSI.subscribe("colorChange", function(e) { freshColor(e.data.red, e.data.green, e.data.blue) });
