@@ -1,0 +1,143 @@
+@(message: String, title: String, address: String) 
+
+@main("Testing") { 
+
+    <nav>
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo">OOCSI-web</a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+            </ul>
+        </div>
+    </nav>
+    
+    <div id="chartsContainer" class="container">
+	</div>
+
+	<div class="container">
+		<div class="row">
+		    <br><br>
+
+			<p>
+
+			</p>
+
+   		    <br><br>
+		</div>
+	</div>
+
+    <script type="text/javascript">
+    	
+        // setup
+        // --------------------------------------------------------------------    
+    	
+	   	$(document).ready(function(){
+	        // connect to OOCSI server running on IP
+			OOCSI.connect("ws://" + window.location.host + "/ws");
+
+			// add charts			
+			addChart('OOCSI_metrics', 'messages');
+			addChart('OOCSI_metrics', 'clients');
+			addChart('OOCSI_metrics', 'channels');
+  		});
+        	
+		var charts = [];
+		var channels = {};
+    
+	    // add chart function
+	    function addChart(channel, selector) {
+
+	    	// prepare chart
+	    	var newChart = {
+				configuration: {
+					caption: '',
+					channel: '',
+					selector: ''
+				},
+				chartData: [{'date': new Date(), 'value': 0}],
+				chartSpec: {
+					title: "",
+			        //description: "This is a simple line chart. You can remove the area portion by adding area: false to the arguments list.",
+			        data: [],
+			        width: 800,
+			        height: 200,
+			        right: 40,
+			        interpolate: 'linear',
+			        transition_on_update: false,
+			        target: document.getElementById('red-channel'),
+			        x_accessor: 'date',
+			        y_accessor: 'value'
+		    	}
+			};
+
+			// set configuration
+			newChart.configuration.channel = channel;
+			newChart.configuration.selector = selector;
+
+			var row = d3.select('#chartsContainer')
+				.append('div').attr('id', 'container' + (charts.length + 1)).classed('row', true);
+			row = row.append('div').classed('card-panel', true);
+			row.append('div').classed('col s12', true).html('OOCSI: ' + selector);
+			row.append('div').classed('col s12', true).style('font-weight', 100).html('current value: ').append('span').attr('id', 'container_currVal' + (charts.length + 1));			
+			row.append('div').attr('id', 'chart' + (charts.length + 1)).classed('col s12', true);
+			row.append('div').style('clear', 'both');
+
+			newChart.chartSpec.target = document.getElementById('chart' + (charts.length + 1));
+
+			var index = charts.length + 1;
+
+			charts.push(newChart);
+
+			// check for channel
+			if(channels[channel] === undefined) {
+				channels[channel] = [{selector: selector, index: charts.length - 1}];
+
+			    OOCSI.subscribe(channel, function(e) {
+					{
+				    	for (var i = 0; i < channels[channel].length; i++) {
+				    		var selector = channels[channel][i];
+				    		var value = eval('e.data.' + selector.selector);
+					    	updateChart(selector.index, value);
+				    	};
+					}
+			    });
+			} else {
+				channels[channel].push({selector: selector, index: charts.length - 1});
+			}
+
+	    	//updateChart(charts.length - 1, 0);
+    	}
+	    
+	    // chart update function
+		function updateChart(index, data) {
+		
+			var chartData = charts[index].chartData;
+			var chartSpec = charts[index].chartSpec;
+		
+			// add new data
+			if(!isNaN(data)) {
+				chartData.push({'date': new Date(), 'value': data});
+				$('#container_currVal'+(index+1)).text(data);
+				$('#chart'+(index+1)).show();
+			} else {
+				chartData.push({'date': new Date(), 'value': 0});
+				$('#container_currVal'+(index+1)).text('"' + data + '"');
+				$('#chart'+(index+1)).hide();
+			}
+			
+			// truncate data to max length
+			while(chartData.length > 500) {
+				chartData.shift();
+			}
+			
+			// convert?
+	    	//chartSpec.data = MG.convert.date(chartData, 'date');
+	    	
+	    	// update chart
+	    	chartSpec.data = chartData;
+	    	delete chartSpec.xax_format;
+		    MG.data_graphic(chartSpec);
+		}
+    
+    </script>
+
+}

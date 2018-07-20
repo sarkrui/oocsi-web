@@ -75,7 +75,7 @@
     		$('.modal-trigger').leanModal();
 
 			// connect to OOCSI server
-			OOCSI.connect("ws://@address");
+			OOCSI.connect("ws://" + window.location.host + "/ws");
 
 			// add charts
 			var json = readCookie('charts');
