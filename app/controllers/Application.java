@@ -89,11 +89,14 @@ public class Application extends Controller {
 	}
 
 	public Result dashboard() {
-		return ok(views.html.Application.dashboard.render("title", "content", request().host() + "/ws"));
+		return ok(views.html.Application.dashboard.render("dashboard", "", request().host()));
 	}
 
 	public Result test() {
-		return ok(views.html.Application.test.render("title", "content", request().host() + "/ws"));
+		return ok(views.html.Application.test.render("testing", "", request().host()));
 	}
 
+	public Result metrics() {
+		return ok(views.html.Application.metrics.render("metrics", "", request().host()));
+	}
 }

@@ -34,6 +34,12 @@ public class ServerClientActor extends UntypedActor {
 			if (serviceClient != null) {
 				Message serviceMessage = new Message(requestClient.getName(), request.service);
 
+				// add webcall action
+				serviceMessage.addData(WEBCALL_ACTION, request.call);
+
+				// add message handle
+				serviceMessage.addData(MESSAGE_HANDLE, request.service);
+
 				// try to parse the webcall_data
 				if (request.data != null && request.data.length() > 0) {
 					Map<String, Object> map = Protocol.parseJSONMessage(request.data);
@@ -45,11 +51,7 @@ public class ServerClientActor extends UntypedActor {
 					else {
 						serviceMessage.addData(WEBCALL_DATA, map);
 					}
-					serviceMessage.addData(WEBCALL_ACTION, request.call);
 				}
-
-				// add message handle
-				serviceMessage.addData(MESSAGE_HANDLE, request.service);
 
 				// send out to responder
 				serviceClient.send(serviceMessage);
