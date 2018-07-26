@@ -8,6 +8,7 @@ var OOCSI = (function() {
 	var websocket;
 	var connected = false;
 	var logger = internalLog;
+	var error = internalError;
 
 	function init() {
 		logger("CONNECTING to "  + wsUri);
@@ -66,7 +67,8 @@ var OOCSI = (function() {
 	}
 
 	function onError(evt) {
-		logger('ERROR: ' + evt.data);
+		error();
+		logger('ERROR: ' + evt);
 	}
 
 	function waitForSocket(fn) {
@@ -77,17 +79,21 @@ var OOCSI = (function() {
 		}
 	} 
 
-	function internalClose() {
-		websocket && websocket.close();
-	}
-
 	function submit(message) {
 		if(websocket && websocket.send(message)) {
 			logger("SENT: " + message);	
 		}
 	}
 
+	function internalClose() {
+		websocket && websocket.close();
+	}
+
 	function internalLog(message) {
+		// do nothing by default
+	}
+
+	function internalError() {
 		// do nothing by default
 	}
 
@@ -208,6 +214,9 @@ var OOCSI = (function() {
 		},
 		logger: function(fn) {
 			logger = fn;
+		},
+		error: function (fn) {
+			error = fn;
 		}
 	};
 
