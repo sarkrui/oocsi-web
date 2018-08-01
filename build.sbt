@@ -1,6 +1,6 @@
 name := """oocsi-websocket"""
 
-version := "0.18"
+version := "0.19"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
