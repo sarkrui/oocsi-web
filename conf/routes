@@ -4,7 +4,7 @@
 
 # Home page
 GET		/							controllers.Application.index()
-GET		/ws							controllers.Application.index()
+GET		/ws							controllers.Application.ws()
 GET 	/dashboard					controllers.Application.dashboard()
 GET 	/test						controllers.Application.test()
 GET 	/metrics						controllers.Application.metrics()

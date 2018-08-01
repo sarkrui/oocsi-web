@@ -1,0 +1,199 @@
+@(message: String, title: String, address: String, clients: String, channels: String) 
+
+@main("Welcome") { 
+
+	  <nav>
+	    <div class="nav-wrapper blue lighten-3">
+	      <a href="/" class="brand-logo" style="padding: 0 1em">OOCSI</a>
+	      <ul id="nav-mobile" class="right hide-on-med-and-down">
+			<li><a href="/metrics">Metrics <i class="material-icons right">save</i></a></li>
+			<li><a href="/dashboard">Dashboard <i class="material-icons right">save</i></a></li>
+        	<li><a href="/test">Test <i class="material-icons right">settings</i></a></li>        	
+	      </ul>
+	    </div>
+	  </nav>
+  
+	<div class="container">
+		<div class="row" style="margin-top: 1em">
+			<div class="col s12">
+				<h3>Welcome to OOCSI</h3>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col m6 s12">
+				<p>
+					<b>
+						What it is
+					</b>
+				</p>
+				<p>
+					A prototyping middleware for design education and research designed and developed at the Industrial Design department of Eindhoven University of Technology. OOCSI is completely open-source and published under a permissive license. Consider contributing on <a href="https://github.com/iddi/oocsi">GitHub</a>.
+				</p>
+				<hr>
+				<p>
+					<b>
+						What you can do here (on this server)
+					</b>
+					<ul>
+						<li>
+							Build and test prototypes that need	connectivity
+						</li>
+						<li>
+							Test and evaluate OOCSI for your use-case
+						</li>
+						<li>
+							Try some examples
+						</li>
+					</ul>
+					<p>How to do that? Check out the right side for connection options.</p>
+				</p>
+				<img src="">
+				<div class="col s12 card" style="padding: 1rem;">
+					<b>IMPORTANT NOTE</b>: This is a public server that allows open connectivity. Please use this responsibly and be aware that all data is in principle visible to all other users. Do NOT send confidential, personal or secret information. Fair use applies.
+				</div>
+
+				<p>
+					<b>
+						How to learn more?
+					</b>
+				</p>	
+				<p>
+					We are currently preparing some more information material about OOCSI and a series of short video lectures. In the meanwhile, you can read more about OOCSI on the <a href="https://github.com/iddi/oocsi/wiki">wiki</a>.
+				</p>
+			</div>
+			<div class="col m5 offset-m1 s12">
+				<p>
+					<b>
+						What is going on right now
+					</b>
+				</p>
+				<p>
+					An OOCSI server can be busy at times; currently, this is happening:
+					<br>
+					<i><span id="livemetrics">loading...</span></i>
+					<br>
+					More <a href="/metrics">metrics.</a>
+				</p>
+				<p>
+					<b>Connected clients</b>
+					<br>
+					@if(clients.length() > 0) {
+						The following clients are currently connected (refresh page to update):
+						<code class="blue-text">							
+							@clients.replace(",", ", ")
+						</code>
+					} else {
+						no clients are currently connected
+					}
+				</p>
+				<p>
+					<b>Open channels</b>
+					<br>
+					@if(channels.length() > 0) {
+						The following channels are currently open (refresh page to update):
+						<code class="blue-text">							
+							@channels.replace(",", ", ")
+						</code>
+					} else {
+						no open channels at the moment
+					}
+				</p>
+				<hr>				
+				<p>
+					<b>
+						How to connect
+					</b>
+				</p>
+				<p>
+					OOCSI can be used by many different platforms and has libraries or bindings for different programming languages. See below for some options:
+				</p>
+				<ul class="collapsible">
+					<li>
+						<div class="collapsible-header">Processing</div>
+						<div class="collapsible-body" style="padding: 1rem;">
+								Connect to this server:
+								<blockquote>
+									OOCSI myOocsi = new OOCSI(this, "my_unique_handle", "ADDRESS");
+								</blockquote>
+								More information: <a href="https://github.com/iddi/oocsi-processing" target="_blank">setup & use</a>.
+						</div>
+					</li>
+					<li>
+						<div class="collapsible-header">Java/Android</div>
+						<div class="collapsible-body" style="padding: 1rem;">
+								Connect to this server:
+								<blockquote>
+									OOCSICommunicator oc = new OOCSICommunicator(this, "my_unique_handle");
+									oc.setReconnect(true);
+									oc.connect("ADDRESS", 4444);
+								</blockquote>
+								More information: <a href="https://github.com/iddi/oocsi#oocsi-client" target="_blank">setup & use</a>.
+						</div>
+					</li>
+					<li>
+						<div class="collapsible-header">Python</div>
+						<div class="collapsible-body" style="padding: 1rem;">
+								Connect to this server:
+								<blockquote>
+									oocsi = OOCSI('my_unique_handle', 'ADDRESS')
+								</blockquote>
+								More information: <a href="https://github.com/iddi/oocsi-python" target="_blank">setup & use</a>.
+						</div>
+					</li>
+					<li>
+						<div class="collapsible-header">Websocket (Javascript)</div>
+						<div class="collapsible-body" style="padding: 1rem;">
+								Connect to this server:
+								<blockquote>
+									OOCSI.connect('my_unique_handle', 'ADDRESS')
+								</blockquote>
+								More information: <a href="https://github.com/iddi/oocsi-websocket" target="_blank">setup & use</a>.
+						</div>
+					</li>
+					<li>
+						<div class="collapsible-header">Arduino / ESP (C/C++)</div>
+						<div class="collapsible-body" style="padding: 1rem;">
+								Connect to this server:
+								<blockquote>
+									OOCSI oocsi = OOCSI();
+									oocsi.connect(OOCSIName, hostserver, ssid, password, processOOCSI);
+								</blockquote>
+								More information: <a href="https://github.com/iddi/oocsi-esp" target="_blank">setup & use</a>.
+						</div>
+					</li>
+				</ul>
+				<p>
+					With these different languages OOCSI can be accessed on most popular platforms on desktop (Windows, Mac, Linux), mobile (iOS, Android) and embedded (Raspberry Pi, ESP, ...).
+				</p>
+			</div>
+		</div>
+	</div>
+	
+
+	<script type="text/javascript">
+
+	   	$(document).ready(function(){
+
+	   		$('blockquote').each(function() {
+	   			$(this).html($(this).html().replace("ADDRESS", window.location.hostname));
+	   		});
+
+
+
+			// connect to OOCSI server
+			OOCSI.connect("ws://" + window.location.host + "/ws");
+
+			OOCSI.subscribe("OOCSI_metrics", function(e) {
+				$("#livemetrics")
+					.html(
+						"Clients: " + e.data.clients + 
+						", Channels: " + e.data.channels + 
+						", Messages: " + e.data.messagesTotal + 
+						", Messages/sec: " + e.data.messages);
+			});
+
+  		});
+        	
+	</script>
+
+}

@@ -28,8 +28,25 @@ public class Application extends Controller {
 	@Inject
 	ActorSystem system;
 
-	public LegacyWebSocket<String> index() {
-		return ws();
+	public Result index() {
+		OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
+		String channels = server.getChannelList().replace("OOCSI_connections,", "").replace("OOCSI_clients,", "")
+				.replace("OOCSI_events,", "").replace("OOCSI_metrics,", "").replace("OSC,", "");
+		String clients = server.getClientList();
+
+		return ok(views.html.Application.index.render("index", "", request().host(), clients, channels));
+	}
+
+	public Result dashboard() {
+		return ok(views.html.Application.dashboard.render("dashboard", "", request().host()));
+	}
+
+	public Result test() {
+		return ok(views.html.Application.test.render("testing", "", request().host()));
+	}
+
+	public Result metrics() {
+		return ok(views.html.Application.metrics.render("metrics", "", request().host()));
 	}
 
 	public LegacyWebSocket<String> ws() {
@@ -86,17 +103,5 @@ public class Application extends Controller {
 					}
 				}).exceptionally(e -> notFound(service + " not found"));
 		return prom;
-	}
-
-	public Result dashboard() {
-		return ok(views.html.Application.dashboard.render("dashboard", "", request().host()));
-	}
-
-	public Result test() {
-		return ok(views.html.Application.test.render("testing", "", request().host()));
-	}
-
-	public Result metrics() {
-		return ok(views.html.Application.metrics.render("metrics", "", request().host()));
 	}
 }

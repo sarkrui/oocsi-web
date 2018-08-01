@@ -2,20 +2,74 @@
 
 @main("Testing") { 
 
-    <nav>
-        <div class="nav-wrapper">
-            <a href="#" class="brand-logo">OOCSI-web</a>
-            <ul id="nav-mobile" class="right hide-on-med-and-down">
-            </ul>
-        </div>
-    </nav>
+	  <nav>
+	    <div class="nav-wrapper blue lighten-3">
+	      <a href="/" class="brand-logo" style="padding: 0 1em">OOCSI</a>
+	      <ul id="nav-mobile" class="right hide-on-med-and-down">
+			<li><a href="/metrics">Metrics <i class="material-icons right">save</i></a></li>
+			<li><a href="/dashboard">Dashboard <i class="material-icons right">save</i></a></li>
+        	<li class="active"><a href="/test">Test <i class="material-icons right">settings</i></a></li>        	
+	      </ul>
+	    </div>
+	  </nav>
+
 	<div class="container">
 		<div class="row">
 		    <br><br>
 
-			<p>
+			<div class="col s12 card">
 				OOCSI is loaded. Use the browser developer console to perform your tests.
-			</p>
+			</div>
+
+			<div>
+				<b>
+					The developer console is a tool which logs the information associated with a web page, such as JavaScript, network requests, and security errors.
+				</b>
+			</div>
+
+			<div>
+				<h4>Chrome</h4>
+				<p>
+					To open the developer console window on Chrome, use the keyboard shortcut <kbd>Cmd</kbd><kbd>Shift</kbd><kbd>J</kbd> (on Windows) or <kbd>Cmd</kbd><kbd>Option</kbd><kbd>J</kbd> (on Mac).
+				</p>
+				<p>
+					Alternatively, you can use the Chrome menu in the browser window, select the option "More Tools," and then select "Developer Tools."
+				</p>
+			</div>
+			<div>
+				<h4>Edge</h4>
+				<p>
+					To open the console on Edge, hit <kbd>F12</kbd> to access the Developer Tools. Once in the Developer Tools, navigate to the Console tab.
+				</p>
+			</div>
+			<div>
+				<h4>Firefox</h4>
+				<p>
+					To open the console on Firefox, use the keyboard shortcut <kbd>Cmd</kbd><kbd>Shift</kbd><kbd>K</kbd> (on Windows) or <kbd>Cmd</kbd><kbd>Option</kbd><kbd>K</kbd> (on Mac). The toolbox will appear at the bottom of the browser window, with the Web Console activated.
+				</p>
+				<p>
+					Alternatively, under the header Tools in the Mac menu bar, navigate to the sub-menu Web Developer and select Web Console.
+				</p>
+			</div>
+
+			<div>
+				<h4>Safari</h4>
+				<p>
+					To open the developer console on Safari, you will first need to turn on the Develop menu. To do this, open the Safari menu in the Mac menu bar, then select Preferences.
+				</p>
+				<p>
+					Once in the Preferences dialog, navigate to the Advanced tab, then check the "Show Develop menu in the menu bar" box.
+				</p>
+				<p>
+					Once the Develop menu has been enabled, you can go to the Develop menu in the menu bar and then select the "Show Error Console" option.
+				</p>
+				<p>
+					The Error Console will show up on the bottom half of the active browser window.
+				</p>
+				<p>
+					Alternatively, you can use the keyboard shortcut <kbd>Option</kbd><kbd>Cmd</kbd><kbd>C</kbd>, though note that you will need to enable the Develop menu in your Safari Preferences for this shortcut to work.
+				</p>
+			</div>
 
    		    <br><br>
 		</div>
