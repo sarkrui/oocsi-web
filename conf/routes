@@ -12,6 +12,12 @@ GET 	/metrics						controllers.Application.metrics()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
+# REST API
+GET		/channels					controllers.Application.channels()
+POST	/send						controllers.Application.send(channel: String ?= "")
+POST	/send/						controllers.Application.send(channel: String ?= "")
+POST	/send/:channel				controllers.Application.send(channel)
+
 # do services last
 GET 	/:service					controllers.Application.serviceIndex(service)
 GET 	/:service/					controllers.Application.serviceIndex(service)

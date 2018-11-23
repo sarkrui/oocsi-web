@@ -13,8 +13,11 @@ import controllers.actors.WebSocketClientActor;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import nl.tue.id.oocsi.server.OOCSIServer;
+import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.protocol.Message;
 import play.Play;
+import play.data.DynamicForm;
+import play.data.FormFactory;
 import play.mvc.Controller;
 import play.mvc.LegacyWebSocket;
 import play.mvc.Result;
@@ -27,6 +30,9 @@ public class Application extends Controller {
 
 	@Inject
 	ActorSystem system;
+
+	@Inject
+	FormFactory formFactory;
 
 	public Result index() {
 		OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
@@ -51,6 +57,75 @@ public class Application extends Controller {
 
 	public LegacyWebSocket<String> ws() {
 		return WebSocket.withActor(WebSocketClientActor::props);
+	}
+
+	/**
+	 * return list of channels for GET request
+	 * 
+	 * @return
+	 */
+	public Result channels() {
+		return ok(Play.application().injector().instanceOf(OOCSIServer.class).getChannelList());
+	}
+
+	/**
+	 * handle POST request to send a message to a channel
+	 * 
+	 * @param channel
+	 * @return
+	 */
+	public Result send(String channel) {
+		DynamicForm dynamicForm = formFactory.form().bindFromRequest();
+
+		// check server available
+		String sender = dynamicForm.get("sender");
+		if (sender == null || sender.trim().isEmpty()) {
+			return badRequest("ERROR: sender missing");
+		}
+
+		// // check channel available
+		if (channel == null || channel.trim().isEmpty()) {
+			return badRequest("ERROR: channel missing");
+		}
+
+		return internalSend(sender, channel, dynamicForm.data());
+	}
+
+	/**
+	 * internal handling of web send request
+	 * 
+	 * @param sender
+	 * @param channel
+	 * @param messageData
+	 * @return
+	 */
+	private Result internalSend(String sender, String channel, Map<String, String> messageData) {
+		// start message processing
+		OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
+		Channel serverChannel = server.getChannel(channel);
+		if (serverChannel != null) {
+
+			// Logger.info("Sender: " + sender);
+			// Logger.info("Channel: " + channel);
+
+			// create message
+			Message message = new Message(sender, channel);
+
+			// fill message
+			for (String key : messageData.keySet()) {
+				if (!key.equals("sender") || !key.equals("channel") || !key.equals("recipient")
+						|| !key.equals("timestamp") || !key.equals("")) {
+					message.addData(key, messageData.get(key));
+				}
+			}
+
+			// send message
+			serverChannel.send(message);
+		} else {
+			return notFound("ERROR: channel not registered");
+		}
+
+		return ok("Message delivered to " + channel);
 	}
 
 	public CompletionStage<Result> serviceIndex(String service) {
