@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
+import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
 import play.Play;
 import play.data.DynamicForm;
@@ -102,12 +103,16 @@ public class Application extends Controller {
 	private Result internalSend(String sender, String channel, Map<String, String> messageData) {
 		// start message processing
 		OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
+
+		// check whether there is another client with same name (-> abort)
+		Client serverClient = server.getClient(sender);
+		if (serverClient != null) {
+			return unauthorized("ERROR: different client with same name exists");
+		}
+
+		// check whether recipient channel is active
 		Channel serverChannel = server.getChannel(channel);
 		if (serverChannel != null) {
-
-			// Logger.info("Sender: " + sender);
-			// Logger.info("Channel: " + channel);
-
 			// create message
 			Message message = new Message(sender, channel);
 

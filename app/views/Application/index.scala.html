@@ -36,20 +36,26 @@
 					</b>
 					<ul>
 						<li>
-							Build and test prototypes that need	connectivity
+							- Build and test prototypes that need	connectivity
 						</li>
 						<li>
-							Test and evaluate OOCSI for your use-case
+							- Test and evaluate OOCSI for your use-case
 						</li>
 						<li>
-							Try some examples
+							- Try some examples
 						</li>
 					</ul>
 					<p>How to do that? Check out the right side for connection options.</p>
 				</p>
 				<img src="">
 				<div class="col s12 card" style="padding: 1rem;">
-					<b>IMPORTANT NOTE</b>: This is a public server that allows open connectivity. Please use this responsibly and be aware that all data is in principle visible to all other users. Do NOT send confidential, personal or secret information. Fair use applies.
+					<b>IMPORTANT NOTE</b>:
+					This is a public server that allows open connectivity.
+					Please use it responsibly and be aware that all data is in principle visible to all other users.
+					Do NOT send confidential, personal or secret information. Fair use applies.
+					<br><br>
+					The server will not store any information.
+					Log files may contain OOCSI-specific connection meta-data, but no personally identifiable information such as IP addresses, email addresses etc.  
 				</div>
 
 				<p>
@@ -138,6 +144,15 @@
 									oocsi = OOCSI('my_unique_handle', 'ADDRESS')
 								</blockquote>
 								More information: <a href="https://github.com/iddi/oocsi-python" target="_blank">setup & use</a>.
+						</div>
+					</li>
+					<li>
+						<div class="collapsible-header">REST</div>
+						<div class="collapsible-body" style="padding: 1rem;">
+								Send message to a channel on this server:
+								<blockquote>
+									curl -X POST http://ADDRESS/send/testchannel -d "sender=myhandle&amp;param1=1.6&amp;param2=text"
+								</blockquote>
 						</div>
 					</li>
 					<li>
