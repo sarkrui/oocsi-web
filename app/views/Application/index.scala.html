@@ -1,6 +1,6 @@
 @(message: String, title: String, address: String, clients: String, channels: String) 
 
-@main("Welcome") { 
+@main("Welcome to OOCSI") { 
 
 	  <nav>
 	    <div class="nav-wrapper blue lighten-3">
@@ -196,7 +196,7 @@
 
 
 			// connect to OOCSI server
-			OOCSI.connect("ws://" + window.location.host + "/ws");
+			OOCSI.connect("wss://" + window.location.host + "/ws");
 
 			OOCSI.subscribe("OOCSI_metrics", function(e) {
 				$("#livemetrics")

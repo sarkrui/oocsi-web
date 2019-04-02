@@ -28,7 +28,7 @@ public class WebSocketClient extends Client {
 	private WebSocketClientActor output;
 
 	public WebSocketClient(String token, OOCSIServer server, WebSocketClientActor out) {
-		super(token);
+		super(token, server.getChangeListener());
 
 		this.server = server;
 		this.output = out;

@@ -92,7 +92,7 @@ public class ServerClientActor extends UntypedActor {
 		Message completedMessage = null;
 
 		public ServerClient() {
-			super("serverclient" + Math.random());
+			super("serverclient" + Math.random(), server.getChangeListener());
 		}
 
 		@Override

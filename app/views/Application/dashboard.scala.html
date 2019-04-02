@@ -1,6 +1,6 @@
 @(message: String, title: String, address: String) 
 
-@main("Welcome") { 
+@main("Dashboard") { 
 
 	  <nav>
 	    <div class="nav-wrapper blue lighten-3">
@@ -73,7 +73,7 @@
     		$('.modal-trigger').leanModal();
 
 			// connect to OOCSI server
-			OOCSI.connect("ws://" + window.location.host + "/ws");
+			OOCSI.connect("wss://" + window.location.host + "/ws");
 
 			// add charts
 			var json = readCookie('charts');
