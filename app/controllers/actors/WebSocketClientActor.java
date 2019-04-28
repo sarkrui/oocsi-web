@@ -2,27 +2,22 @@ package controllers.actors;
 
 import com.google.inject.Inject;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import model.WebSocketClient;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import play.Logger;
-import play.Play;
 
-@SuppressWarnings("deprecation")
-public class WebSocketClientActor extends UntypedActor {
+public class WebSocketClientActor extends AbstractActor {
 
-	public static Props props(ActorRef out) {
-		return Props.create(WebSocketClientActor.class, out);
+	public static Props props(ActorRef out, OOCSIServer server) {
+		return Props.create(WebSocketClientActor.class, out, server);
 	}
 
 	private final ActorRef out;
-
-	@Inject
-	OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
-
+	private final OOCSIServer server;
 	private WebSocketClient client;
 
 	/**
@@ -30,19 +25,20 @@ public class WebSocketClientActor extends UntypedActor {
 	 * 
 	 * @param out
 	 */
-	public WebSocketClientActor(ActorRef out) {
+	@Inject
+	public WebSocketClientActor(ActorRef out, OOCSIServer server) {
 		this.out = out;
+		this.server = server;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see akka.actor.UntypedActor#onReceive(java.lang.Object)
+	 * @see akka.actor.AbstractActor#createReceive()
 	 */
-	public void onReceive(Object message) throws Exception {
-		if (message instanceof String) {
-			String event = (String) message;
-
+	@Override
+	public Receive createReceive() {
+		return receiveBuilder().match(String.class, event -> {
 			if (client == null) {
 				client = new WebSocketClient(event, server, this);
 				if (server.addClient(client)) {
@@ -60,11 +56,8 @@ public class WebSocketClientActor extends UntypedActor {
 			}
 
 			// anything useful?
-			client.message(event);
-
-			// // log events to the console
-			// Logger.info(event);
-		}
+			client.receive(event);
+		}).build();
 	}
 
 	/**
@@ -87,7 +80,7 @@ public class WebSocketClientActor extends UntypedActor {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see akka.actor.UntypedActor#postStop()
+	 * @see akka.actor.AbstractActor#postStop()
 	 */
 	public void postStop() throws Exception {
 		if (client != null) {
@@ -95,5 +88,4 @@ public class WebSocketClientActor extends UntypedActor {
 			Logger.info("WS client " + client.getName() + " disconnected");
 		}
 	}
-
 }

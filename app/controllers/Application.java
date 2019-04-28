@@ -6,58 +6,116 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.typesafe.config.Config;
+
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
+import akka.stream.Materializer;
 import controllers.actors.ServerClientActor;
 import controllers.actors.WebSocketClientActor;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
-import play.Play;
+import play.Environment;
+import play.Logger;
 import play.data.DynamicForm;
 import play.data.FormFactory;
+import play.inject.ApplicationLifecycle;
+import play.libs.streams.ActorFlow;
 import play.mvc.Controller;
-import play.mvc.LegacyWebSocket;
 import play.mvc.Result;
 import play.mvc.WebSocket;
 import scala.compat.java8.FutureConverters;
 
-@SuppressWarnings("deprecation")
 @Singleton
 public class Application extends Controller {
 
-	@Inject
-	ActorSystem system;
+	private final ActorSystem system;
+	private final Materializer materializer;
+	private final FormFactory formFactory;
+	private final OOCSIServer server;
+	private final Environment environment;
 
 	@Inject
-	FormFactory formFactory;
+	public Application(ActorSystem as, Materializer m, ApplicationLifecycle lifecycle, FormFactory f, Environment env,
+			OOCSIServer server, Config configuration) {
 
+		this.system = as;
+		this.materializer = m;
+		this.formFactory = f;
+		this.environment = env;
+		this.server = server;
+
+		// configure the number of maximal clients
+		if (configuration.hasPath("oocsi.clients")) {
+			try {
+				int clients = configuration.getInt("oocsi.clients");
+				OOCSIServer.setMaxClients(clients);
+			} catch (Exception e) {
+				Logger.warn("Property 'oocsi.clients' not readable or parseable in configuration");
+			}
+		}
+
+		// register shutdown hook
+		lifecycle.addStopHook(() -> {
+			server.stop();
+			return CompletableFuture.completedFuture(null);
+		});
+	}
+
+	/**
+	 * action to show the landing page for the OOCSI server
+	 * 
+	 * @return
+	 */
 	public Result index() {
-		OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
 		String channels = server.getChannelList().replace("OOCSI_connections,", "").replace("OOCSI_clients,", "")
 				.replace("OOCSI_events,", "").replace("OOCSI_metrics,", "").replace("OSC,", "");
 		String clients = server.getClientList();
 
-		return ok(views.html.Application.index.render("index", "", request().host(), clients, channels));
+		return ok(views.html.Application.index.render("index", "", request().host(), environment.isProd(), clients,
+				channels));
 	}
 
+	/**
+	 * action to show a page to make your own dashboard
+	 * 
+	 * @return
+	 */
 	public Result dashboard() {
-		return ok(views.html.Application.dashboard.render("dashboard", "", request().host()));
+		return ok(views.html.Application.dashboard.render("dashboard", "", request().host(), environment.isProd()));
 	}
 
+	/**
+	 * action to show a test page for websocket experiments with OOCSI
+	 * 
+	 * @return
+	 */
 	public Result test() {
-		return ok(views.html.Application.test.render("testing", "", request().host()));
+		return ok(views.html.Application.test.render("testing", "", request().host(), environment.isProd()));
 	}
 
+	/**
+	 * action to show server metrics page
+	 * 
+	 * @return
+	 */
 	public Result metrics() {
-		return ok(views.html.Application.metrics.render("metrics", "", request().host()));
+		return ok(views.html.Application.metrics.render("metrics", "", request().host(), environment.isProd()));
 	}
 
-	public LegacyWebSocket<String> ws() {
-		return WebSocket.withActor(WebSocketClientActor::props);
+	/**
+	 * websocket connections end up here
+	 * 
+	 * @return
+	 */
+	public WebSocket ws() {
+		return WebSocket.Text.accept(
+				request -> ActorFlow.actorRef(out -> WebSocketClientActor.props(out, server), system, materializer));
 	}
 
 	/**
@@ -66,7 +124,7 @@ public class Application extends Controller {
 	 * @return
 	 */
 	public Result channels() {
-		return ok(Play.application().injector().instanceOf(OOCSIServer.class).getChannelList());
+		return ok(server.getChannelList());
 	}
 
 	/**
@@ -89,7 +147,7 @@ public class Application extends Controller {
 			return badRequest("ERROR: channel missing");
 		}
 
-		return internalSend(sender, channel, dynamicForm.data());
+		return internalSend(sender, channel, dynamicForm.rawData());
 	}
 
 	/**
@@ -101,9 +159,6 @@ public class Application extends Controller {
 	 * @return
 	 */
 	private Result internalSend(String sender, String channel, Map<String, String> messageData) {
-		// start message processing
-		OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
-
 		// check whether there is another client with same name (-> abort)
 		Client serverClient = server.getClient(sender);
 		if (serverClient != null) {
@@ -133,18 +188,39 @@ public class Application extends Controller {
 		return ok("Message delivered to " + channel);
 	}
 
+	/**
+	 * respond to service check
+	 * 
+	 * @param service
+	 * @return
+	 */
 	public CompletionStage<Result> serviceIndex(String service) {
-		if (Play.application().injector().instanceOf(OOCSIServer.class).getChannel(service) != null) {
+		if (server.getChannel(service) != null) {
 			return CompletableFuture.completedFuture(ok(service + " ok"));
 		} else {
 			return CompletableFuture.completedFuture(notFound(service + " not found"));
 		}
 	}
 
+	/**
+	 * respond to GET request to service (forward, return)
+	 * 
+	 * @param service
+	 * @param call
+	 * @param data
+	 * @return
+	 */
 	public CompletionStage<Result> serviceCall(String service, String call, String data) {
 		return internalServiceCall(service, call, data);
 	}
 
+	/**
+	 * respond to POST request to service (forward, return)
+	 * 
+	 * @param service
+	 * @param call
+	 * @return
+	 */
 	public CompletionStage<Result> serviceCallPost(String service, String call) {
 		return internalServiceCall(service, call, request().body().asText());
 	}
@@ -158,12 +234,16 @@ public class Application extends Controller {
 	 * @return
 	 */
 	private CompletionStage<Result> internalServiceCall(String service, String call, String data) {
-		ActorRef a = system.actorOf(ServerClientActor.props());
+		final ActorRef a = system.actorOf(ServerClientActor.props(server));
 		CompletionStage<Result> prom = FutureConverters
-				.toJava(ask(a, new ServerClientActor.OOCSIHTTPRequest(service, call, data), 2000))
+				.toJava(ask(a, new ServerClientActor.OOCSIHTTPRequest(service, call, data), 5000))
 				.thenApply(response -> {
+
+					// kill actor
+					a.tell(PoisonPill.getInstance(), a);
+
 					if (response == null) {
-						return ok();
+						return noContent();
 					} else {
 						Map<String, Object> messageData = ((Message) response).data;
 						if (messageData.containsKey("html"))
@@ -181,7 +261,13 @@ public class Application extends Controller {
 						else
 							return ok();
 					}
-				}).exceptionally(e -> notFound(service + " not found"));
+				}).exceptionally(e -> {
+
+					// kill actor
+					a.tell(PoisonPill.getInstance(), a);
+
+					return notFound(service + " not found");
+				});
 		return prom;
 	}
 }

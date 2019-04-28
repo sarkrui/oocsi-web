@@ -3,7 +3,6 @@ import java.io.IOException;
 import com.google.inject.AbstractModule;
 
 import nl.tue.id.oocsi.server.OOCSIServer;
-import play.Play;
 
 public class Module extends AbstractModule {
 

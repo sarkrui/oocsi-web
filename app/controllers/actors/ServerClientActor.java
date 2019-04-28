@@ -1,55 +1,65 @@
 package controllers.actors;
 
 import java.util.Map;
+import java.util.UUID;
 
+import com.google.inject.Inject;
+
+import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import nl.tue.id.oocsi.client.services.OOCSICall;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
 import nl.tue.id.oocsi.server.protocol.Protocol;
-import play.Play;
 
-@SuppressWarnings("deprecation")
-public class ServerClientActor extends UntypedActor {
+public class ServerClientActor extends AbstractActor {
 
-	private static final String MESSAGE_HANDLE = "_MESSAGE_HANDLE";
 	private static final String WEBCALL_DATA = "webcall_data";
 	private static final String WEBCALL_ACTION = "webcall";
 
-	public static Props props() {
-		return Props.create(ServerClientActor.class);
+	public static Props props(OOCSIServer server) {
+		return Props.create(ServerClientActor.class, server);
 	}
 
-	private final ServerClient requestClient = new ServerClient();
-	private OOCSIServer server = Play.application().injector().instanceOf(OOCSIServer.class);
+	private final ServerClient requestClient;
+	private final OOCSIServer server;
+
+	@Inject
+	public ServerClientActor(OOCSIServer server) {
+		this.server = server;
+		this.requestClient = new ServerClient();
+	}
 
 	@Override
-	public void onReceive(Object message) throws Exception {
-		if (message instanceof OOCSIHTTPRequest) {
-			OOCSIHTTPRequest request = (OOCSIHTTPRequest) message;
+	public Receive createReceive() {
+		return receiveBuilder().match(OOCSIHTTPRequest.class, request -> {
 			server.addClient(requestClient);
 			Channel serviceClient = server.getChannel(request.service);
+
 			if (serviceClient != null) {
+
 				Message serviceMessage = new Message(requestClient.getName(), request.service);
 
 				// add webcall action
 				serviceMessage.addData(WEBCALL_ACTION, request.call);
 
 				// add message handle
-				serviceMessage.addData(MESSAGE_HANDLE, request.service);
+				serviceMessage.addData(OOCSICall.MESSAGE_HANDLE, request.service);
+				String uuid = UUID.randomUUID().toString();
+				serviceMessage.addData(OOCSICall.MESSAGE_ID, uuid);
 
 				// try to parse the webcall_data
 				if (request.data != null && request.data.length() > 0) {
 					Map<String, Object> map = Protocol.parseJSONMessage(request.data);
 					// if data could be parsed, use it directly
 					if (map.size() > 0) {
-						serviceMessage.data = map;
+						serviceMessage.data.putAll(map);
 					}
 					// include data verbatim if cannot be parsed as JSON
 					else {
-						serviceMessage.addData(WEBCALL_DATA, map);
+						serviceMessage.addData(WEBCALL_DATA, request.data);
 					}
 				}
 
@@ -57,15 +67,16 @@ public class ServerClientActor extends UntypedActor {
 				serviceClient.send(serviceMessage);
 
 				int i = 0;
-				while (!requestClient.completed() && i < 5) {
+				while (!requestClient.completed() && i < 9) {
 					i++;
-					Thread.sleep(500);
+					Thread.sleep(200);
 				}
+
 				if (requestClient.completedMessage != null) {
 					sender().tell(requestClient.completedMessage, self());
 				}
 			}
-		}
+		}).build();
 	}
 
 	@Override
@@ -76,6 +87,7 @@ public class ServerClientActor extends UntypedActor {
 	}
 
 	public static class OOCSIHTTPRequest {
+
 		String service;
 		String call;
 		String data;
@@ -101,16 +113,16 @@ public class ServerClientActor extends UntypedActor {
 		}
 
 		@Override
-		public void ping() {
-		}
-
-		@Override
 		public boolean isConnected() {
 			return true;
 		}
 
 		@Override
 		public void disconnect() {
+		}
+
+		@Override
+		public void ping() {
 		}
 
 		public boolean completed() {

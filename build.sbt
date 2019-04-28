@@ -1,18 +1,20 @@
 name := """oocsi-websocket"""
+organization := "IndustrialDesign"
 
 version := "0.23"
 
-lazy val root = (project in file(".")).enablePlugins(PlayJava)
+maintainer := "m.funk@tue.nl"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.12.8"
 
 //offline := true
 
 libraryDependencies ++= Seq(
-  javaJdbc,
-  cache,
+  guice,
   javaWs
 )
+
+lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.

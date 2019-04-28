@@ -34,6 +34,11 @@ public class WebSocketClient extends Client {
 		this.output = out;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see nl.tue.id.oocsi.server.model.Client#send(nl.tue.id.oocsi.server.protocol.Message)
+	 */
 	@Override
 	public void send(Message message) {
 		if (output != null) {
@@ -41,6 +46,12 @@ public class WebSocketClient extends Client {
 		}
 	}
 
+	/**
+	 * send a status message
+	 * 
+	 * @param code
+	 * @param message
+	 */
 	public void status(int code, String message) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("code", code);
@@ -53,7 +64,7 @@ public class WebSocketClient extends Client {
 	 * 
 	 * @param message
 	 */
-	public void message(String message) {
+	public void receive(String message) {
 		parseMessage(message);
 	}
 

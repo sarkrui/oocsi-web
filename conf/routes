@@ -18,7 +18,7 @@ POST	/send						controllers.Application.send(channel: String ?= "")
 POST	/send/						controllers.Application.send(channel: String ?= "")
 POST	/send/:channel				controllers.Application.send(channel)
 
-# do services last
+# services with least priority
 GET 	/:service					controllers.Application.serviceIndex(service)
 GET 	/:service/					controllers.Application.serviceIndex(service)
 GET		/:service/:call				controllers.Application.serviceCall(service, call, data: String ?= "")
