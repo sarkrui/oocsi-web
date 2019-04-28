@@ -3,24 +3,30 @@
 # ~~~~
 
 # Home page
-GET		/							controllers.Application.index()
-GET		/ws							controllers.Application.ws()
-GET 	/dashboard					controllers.Application.dashboard()
-GET 	/test						controllers.Application.test()
-GET 	/metrics						controllers.Application.metrics()
+GET		/								controllers.Application.index
+GET		/ws								controllers.Application.ws
+GET 	/dashboard						controllers.Application.dashboard
+GET 	/test							controllers.Application.test
+GET 	/metrics						controllers.Application.metrics
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file               	controllers.Assets.versioned(path="/public", file: Asset)
 
 # REST API
-GET		/channels					controllers.Application.channels()
-POST	/send						controllers.Application.send(channel: String ?= "")
-POST	/send/						controllers.Application.send(channel: String ?= "")
-POST	/send/:channel				controllers.Application.send(channel)
+GET		/channels						controllers.Application.channels()
+POST	/send							controllers.Application.send(channel: String ?= "")
+POST	/send/							controllers.Application.send(channel: String ?= "")
+POST	/send/:channel					controllers.Application.send(channel)
+
+#tutorial pages
+GET 	/tutorials						controllers.Tutorial.index
+GET 	/tutorials/						controllers.Tutorial.index
+GET 	/tutorials/paint-the-canvas		controllers.Tutorial.paint_the_canvas
+
 
 # services with least priority
-GET 	/:service					controllers.Application.serviceIndex(service)
-GET 	/:service/					controllers.Application.serviceIndex(service)
-GET		/:service/:call				controllers.Application.serviceCall(service, call, data: String ?= "")
-GET		/:service/:call/:data		controllers.Application.serviceCall(service, call, data)
-POST	/:service/:call				controllers.Application.serviceCallPost(service, call)
+GET 	/:service						controllers.Application.serviceIndex(service)
+GET 	/:service/						controllers.Application.serviceIndex(service)
+GET		/:service/:call					controllers.Application.serviceCall(service, call, data: String ?= "")
+GET		/:service/:call/:data			controllers.Application.serviceCall(service, call, data)
+POST	/:service/:call					controllers.Application.serviceCallPost(service, call)

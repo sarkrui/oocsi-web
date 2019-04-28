@@ -1,0 +1,56 @@
+@(secure: Boolean) 
+
+@tutorial("Tutorial") { 
+
+	  <nav>
+	    <div class="nav-wrapper black grey-text">
+	      <a href="/" class="brand-logo" style="padding: 0 1em">OOCSI Tutorial</a>
+	      <ul id="nav-mobile" class="right hide-on-med-and-down">
+			<li><a href="/tutorials">Back to Overview <i class="material-icons left">arrow_back</i></a></li>    	
+	      </ul>
+	    </div>
+	  </nav>
+  
+	<div id="sketch-holder">
+	</div>
+	
+	<script type="text/javascript">
+		var queue = [];
+		
+		function setup() {
+			var canvas = createCanvas(windowWidth, windowHeight);
+			// Move the canvas so it’s inside our <div id="sketch-holder">.
+			canvas.parent('sketch-holder');
+			background(0);
+			noStroke();
+		}
+
+		function draw() {
+			fill(0, 15);
+			rect(0, frameCount % height, width, 20);
+
+			while(queue.length > 0) {
+				var pixel = queue.shift();
+				fill(pixel.r, pixel.g, pixel.b);
+				ellipse(pixel.x, pixel.y, 5, 5);
+			}
+		}
+
+	   	$(document).ready(function(){
+
+			// connect to OOCSI server
+			@if(secure) {
+				OOCSI.connect("wss://" + window.location.host + "/ws");	
+			} else{
+				OOCSI.connect("ws://" + window.location.host + "/ws");
+			}
+
+			OOCSI.subscribe("OOCSI_Tutorials_Paint_the_Canvas", function(e) {
+				queue.push({x: e.data.x, y: e.data.y, r: e.data.colorR, g: e.data.colorG, b: e.data.colorB});
+			});
+
+  		});
+        	
+	</script>
+
+}

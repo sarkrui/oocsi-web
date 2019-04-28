@@ -1,4 +1,4 @@
-package controllers.actors;
+package model.actors;
 
 import com.google.inject.Inject;
 

@@ -1,4 +1,4 @@
-package controllers.actors;
+package model.actors;
 
 import java.util.Map;
 import java.util.UUID;
