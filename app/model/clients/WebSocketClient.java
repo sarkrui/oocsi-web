@@ -1,4 +1,4 @@
-package model;
+package model.clients;
 
 import java.util.Date;
 import java.util.HashMap;

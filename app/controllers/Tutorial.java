@@ -4,7 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import akka.actor.ActorSystem;
+import model.clients.EchoClient;
 import model.generators.TestChannelGenerator;
+import model.generators.TimeChannelGenerator;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import play.Environment;
 import play.mvc.Controller;
@@ -20,7 +22,12 @@ public class Tutorial extends Controller {
 	public Tutorial(Environment environment, OOCSIServer server, ActorSystem system, ExecutionContext ectx) {
 		this.environment = environment;
 
+		// start client
+		new EchoClient("echo", server);
+
+		// start generators
 		new TestChannelGenerator(server, system, ectx);
+		new TimeChannelGenerator(server, system, ectx);
 	}
 
 	public Result index() {

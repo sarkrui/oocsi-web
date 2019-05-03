@@ -7,34 +7,34 @@ import com.google.inject.Inject;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import model.clients.ServiceRequestClient;
 import nl.tue.id.oocsi.client.services.OOCSICall;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
-import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
 import nl.tue.id.oocsi.server.protocol.Protocol;
 
-public class ServerClientActor extends AbstractActor {
+public class ServiceClientActor extends AbstractActor {
 
 	private static final String WEBCALL_DATA = "webcall_data";
 	private static final String WEBCALL_ACTION = "webcall";
 
 	public static Props props(OOCSIServer server) {
-		return Props.create(ServerClientActor.class, server);
+		return Props.create(ServiceClientActor.class, server);
 	}
 
-	private final ServerClient requestClient;
+	private final ServiceRequestClient requestClient;
 	private final OOCSIServer server;
 
 	@Inject
-	public ServerClientActor(OOCSIServer server) {
+	public ServiceClientActor(OOCSIServer server) {
 		this.server = server;
-		this.requestClient = new ServerClient();
+		this.requestClient = new ServiceRequestClient(server);
 	}
 
 	@Override
 	public Receive createReceive() {
-		return receiveBuilder().match(OOCSIHTTPRequest.class, request -> {
+		return receiveBuilder().match(ServiceRequest.class, request -> {
 			server.addClient(requestClient);
 			Channel serviceClient = server.getChannel(request.service);
 
@@ -86,47 +86,17 @@ public class ServerClientActor extends AbstractActor {
 		super.postStop();
 	}
 
-	public static class OOCSIHTTPRequest {
+	public static class ServiceRequest {
 
 		String service;
 		String call;
 		String data;
 
-		public OOCSIHTTPRequest(String service, String call, String data) {
+		public ServiceRequest(String service, String call, String data) {
 			this.service = service;
 			this.call = call;
 			this.data = data;
 		}
 	}
 
-	class ServerClient extends Client {
-
-		Message completedMessage = null;
-
-		public ServerClient() {
-			super("serverclient" + Math.random(), server.getChangeListener());
-		}
-
-		@Override
-		public void send(Message message) {
-			completedMessage = message;
-		}
-
-		@Override
-		public boolean isConnected() {
-			return true;
-		}
-
-		@Override
-		public void disconnect() {
-		}
-
-		@Override
-		public void ping() {
-		}
-
-		public boolean completed() {
-			return completedMessage != null;
-		}
-	}
 }

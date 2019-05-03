@@ -14,7 +14,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
 import akka.stream.Materializer;
-import model.actors.ServerClientActor;
+import model.actors.ServiceClientActor;
 import model.actors.WebSocketClientActor;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
@@ -234,9 +234,9 @@ public class Application extends Controller {
 	 * @return
 	 */
 	private CompletionStage<Result> internalServiceCall(String service, String call, String data) {
-		final ActorRef a = system.actorOf(ServerClientActor.props(server));
+		final ActorRef a = system.actorOf(ServiceClientActor.props(server));
 		CompletionStage<Result> prom = FutureConverters
-				.toJava(ask(a, new ServerClientActor.OOCSIHTTPRequest(service, call, data), 5000))
+				.toJava(ask(a, new ServiceClientActor.ServiceRequest(service, call, data), 5000))
 				.thenApply(response -> {
 
 					// kill actor

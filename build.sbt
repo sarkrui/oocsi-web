@@ -1,7 +1,7 @@
-name := """oocsi-websocket"""
+name := """oocsi-web"""
 organization := "IndustrialDesign"
 
-version := "0.23"
+version := "0.24"
 
 maintainer := "m.funk@tue.nl"
 

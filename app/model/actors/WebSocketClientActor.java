@@ -6,7 +6,7 @@ import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
-import model.WebSocketClient;
+import model.clients.WebSocketClient;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import play.Logger;
 

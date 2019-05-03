@@ -19,13 +19,13 @@ import play.test.WithServer;
 public class WebsocketServiceTest extends WithServer {
 
 	@Test
-	public void testServiceIndex() throws InterruptedException {
+	public void testServiceIndexAndServiceResponse() throws InterruptedException {
 		OOCSICommunicator oco = new OOCSICommunicator(this, "newService");
 		oco.connect("127.0.0.1", 4444);
 
 		assertTrue(oco.isConnected());
 
-		oco.register("serviceOne", new Responder() {
+		oco.register("serviceOne", new Responder(oco) {
 			@Override
 			public void respond(OOCSIEvent event, OOCSIData response) {
 				response.data("html", "hello world!");
@@ -35,7 +35,6 @@ public class WebsocketServiceTest extends WithServer {
 		oco.register("serviceTwo", new Responder() {
 			@Override
 			public void respond(OOCSIEvent event, OOCSIData response) {
-				// response.data("html", "hello world!");
 				int number = event.getInt("number", -1);
 				response.data("html", "hello world with number " + (number + 1));
 			}
