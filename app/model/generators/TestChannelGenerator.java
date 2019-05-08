@@ -10,6 +10,8 @@ import scala.concurrent.duration.Duration;
 
 public class TestChannelGenerator {
 
+	private static final String CHANNEL = "testchannel";
+
 	final private OOCSIServer server;
 	final private ActorSystem actorSystem;
 	final private ExecutionContext executionContext;
@@ -30,12 +32,12 @@ public class TestChannelGenerator {
 	}
 
 	private void publish() {
-		Message m = new Message("SERVER", "testchannel");
+		Message m = new Message("SERVER", CHANNEL);
 
 		m.addData("color", 90 + Math.round(Math.sin(frameCount / 20.) * 70));
 		m.addData("position", 90 + Math.round(Math.cos(frameCount / 25.) * 70));
 
-		server.send(m);
+		server.getChannel(CHANNEL).send(m);
 
 		frameCount++;
 	}

@@ -1,0 +1,319 @@
+@(message: String, title: String, address: String, secure: Boolean) 
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>OOCSImote</title>
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/materialize.min.css")">
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/main.css")">
+		<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+		<script src="@routes.Assets.versioned("js/jquery.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/materialize.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/qrcode.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/jsonc.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/oocsi-web.min.js")" type="text/javascript"></script>
+		<!-- <script src="@routes.Assets.versioned("js/main.js")" type="text/javascript"></script> -->
+	</head>
+	<body>
+		<div class="container" class="grey">
+			<div class="row grey lighten-5">
+				<div class="col s12" style="text-align: right">
+					<h4 style="display: inline-block; width: 100%"><a href="#modalQR" id="openQRBtn" class="modal-trigger" style="color: black">OOCSImote</a></h4>
+					<a href="#modalConfiguration" class="btn-flat green modal-trigger"><i class="material-icons">wifi</i> connect</a>
+					<a href="#modalButton" class="btn-flat green lighten-3 modal-trigger"><i class="material-icons">add</i> button</a>
+					<a href="#modalSlider" class="btn-flat green lighten-3 modal-trigger"><i class="material-icons">add</i> slider</a>
+				</div>
+			</div>
+			<div class="row">
+				<div id="progress" class="progress">
+					<div class="indeterminate"></div>
+				</div>
+				<div id="controlContainer" class="col s12">
+				</div>
+			</div>
+
+			<!-- show connection info -->
+			<div id="modalQR" class="modal">
+				<div class="modal-content row">
+					<h4>Connect to this remote</h4>
+					<div id="qrcode" class="col s6"></div>
+					<div id="codelink" class="col s6 flow-text">
+						Use the QR code on the left or the link below to open this configuration of the OOCSImote in another browser window or on a mobile device. Then click the connect button to open a connection to the OOCSI server and start sending control events.
+						<a href="#" target="_blank" class="btn green">link</a>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">close</a>
+				</div>
+			</div>
+
+			<!-- configuration -->
+			<div id="modalConfiguration" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Connect</h4>
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="oocsi_channel" type="text" class="validate">
+								<label for="oocsi_channel">OOCSI Channel</label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="connectBtn" class="modal-close waves-effect waves-green btn">Connect</a>
+				</div>
+			</div>
+
+			<!-- button -->
+			<div id="modalButton" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Add a button</h4>
+					
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="nameBt" type="text" class="validate">
+								<label for="nameBt">Control name</label>
+							</div>
+							<div class="input-field col s6">
+								<input id="parBt" type="text" class="validate">
+								<label for="parBt">Parameter name</label>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col s6">
+								<div class="switch">
+									<label>
+										Off
+										<input id="defBt" type="checkbox">
+										<span class="lever"></span>
+										On
+									</label>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="addButtonBtn" class="modal-close waves-effect waves-green btn">Add button</a>
+				</div>
+			</div>
+
+			<!-- slider -->
+			<div id="modalSlider" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Add a slider</h4>
+					
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="nameSl" type="text" class="validate">
+								<label for="nameSl">Control name</label>
+							</div>
+							<div class="input-field col s6">
+								<input id="parSl" type="text" class="validate">
+								<label for="parSl">Parameter name</label>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="minSl" type="number" class="validate">
+								<label for="minSl">Min</label>
+							</div>
+							<div class="input-field col s6">
+								<input id="maxSl" type="number" class="validate">
+								<label for="maxSl">Max</label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="addSliderBtn" class="modal-close waves-effect waves-green btn">Add slider</a>
+				</div>
+			</div>
+
+			<script type="text/javascript">				
+
+				$(document).ready(function() {
+					
+					$('.modal').modal();
+
+					// setTimeout(function() {
+					// 	M.AutoInit();		
+					// }, 200);
+				
+					// DEFAULT configuration
+
+					var configuration = {
+						channel: "testchannel",
+						platform: "ESP32" /* alternatives: ESP8266, Processing, Python, JS */,
+						controls: [{
+							type: "button",
+							name: "test button",
+							par: "button1",
+							def: true
+						},{
+							type: "slider",
+							name: "test slider",
+							par: "slider1",
+							min: 1,
+							max: 5,
+							def: 3
+						}]
+					};
+
+					// obtain configuration from URL
+					if(window.location.search.length > 1) {
+						var compressedConfig = decodeURIComponent(window.location.search.substring(1));
+						configuration = JSONC.unpack(compressedConfig, true);
+					}
+
+					$('#oocsi_channel').val(configuration.channel);
+					configuration.controls.forEach(function(d, i) {
+						if(d.type=="button") {
+							addButton(d, i);
+						}
+						if(d.type=="slider") {
+							addSlider(d, i);
+						}
+					});
+
+					$('#progress').hide();
+
+					$('#openQRBtn').click(function(e) {
+						$('#qrcode').html('');
+
+						var compressedJSON = JSONC.pack(configuration, true);
+
+						var fullLink = 'http://' + window.location.host + "/?" + encodeURIComponent(JSON.stringify(compressedJSON));
+						var qrcode = new QRCode("qrcode", {
+						    text: fullLink,
+						    width: 256,
+						    height: 256,
+						    colorDark : "#000000",
+						    colorLight : "#ffffff",
+						    correctLevel : QRCode.CorrectLevel.H
+						});
+						$('#codelink a').prop("href", fullLink);
+
+						e.preventDefault();
+					});
+
+					$('#connectBtn').click(function(e) {
+						configuration.channel = $('#oocsi_channel').val();
+
+						if(configuration.channel.length > 3) {
+							// continue
+							$('#progress').show();
+							$('#controlContainer').hide();
+
+							connect();
+						}
+
+
+						e.preventDefault();
+					});
+
+					$('#addButtonBtn').click(function(e) {
+
+						var button = {
+							type: "button",
+							name: $('#nameBt').val(),
+							par: $('#parBt').val(),
+							def: $('#defBt').prop('checked')
+						};
+
+						addButton(button, configuration.controls.length);
+						configuration.controls.push(button);
+						e.preventDefault();
+					});
+					$('#addSliderBtn').click(function(e) {
+
+						var slider = {
+							type: "slider",
+							name: $('#nameSl').val(),
+							par: $('#parSl').val(),
+							min: $('#minSl').val(),
+							max: $('#maxSl').val(),
+							def: $('#minSl').val()
+						};
+
+						addSlider(slider, configuration.controls.length);
+						configuration.controls.push(slider);
+						e.preventDefault();
+					});
+					
+					function addButton(button, index) {
+						$('#controlContainer').append(generateButton(button, index));
+						if(button.def) {
+							$('#control'+ index).prop('checked', true);
+						}
+
+						$('#control'+ index).change(function(e) {
+							dispatch(button, $(this).prop('checked'));
+							e.preventDefault();
+						});
+						$('#delBtn' + index).click(function(e) {
+							$('#control' + index).parent().parent().parent().parent().remove();
+							configuration.controls[index] = {};
+							e.preventDefault();
+						});
+					}
+
+					function addSlider(slider, index) {
+						$('#controlContainer').append(generateSlider(slider, index));
+						$('#control'+ index).on("input", function(e) {
+							dispatch(slider, $(this).val());
+							e.preventDefault();
+						});
+						$('#delBtn' + index).click(function(e) {
+							$('#control' + index).parent().parent().remove();
+							configuration.controls[index] = {};
+							e.preventDefault();
+						});
+					}
+
+					function generateSlider(slider, index) {
+						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + slider.name + '</label></div><div class="range-field col s8"><input type="range" id="control' + index + '" min="' + slider.min + '" max="' + slider.max + '" value="' + slider.def + '" /></div><div class="col m2 hide-on-small-only"><a  class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
+					}
+
+					function generateButton(button, index) {
+						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + button.name + '</label></div><div class="col s8"><div class="switch"><label>Off<input id="control' + index + '" type="checkbox"><span class="lever"></span>On</label></div></div><div class="col m2 hide-on-small-only"><a class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
+					}
+
+					function connect() {
+						// connect to OOCSI server
+						@if(secure) {
+							OOCSI.connect("wss://" + window.location.host + "/ws");
+						} else {
+							OOCSI.connect("ws://" + window.location.host + "/ws");
+						}
+
+						setTimeout(function() {
+							$('#progress').hide();
+							$('#controlContainer').show();
+						}, 1000);
+
+						// OOCSI.subscribe(configuration.channel);
+					}
+
+					function dispatch(element, value) {
+						console.log(element.name + ' changed to ' + value);
+
+						var data = {};
+						data[element.par] = value;
+						OOCSI.send(configuration.channel, data);
+					}
+				});
+
+			</script>
+		</div>
+	</body>
+</html>

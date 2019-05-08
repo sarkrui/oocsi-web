@@ -13,11 +13,11 @@ import scala.concurrent.duration.Duration;
 public class TimeChannelGenerator {
 
 	private static final String CHANNEL = "timechannel";
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 
 	final private OOCSIServer server;
 	final private ActorSystem actorSystem;
 	final private ExecutionContext executionContext;
-	final private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 
 	public TimeChannelGenerator(OOCSIServer server, ActorSystem system, ExecutionContext ectx) {
 		this.server = server;
@@ -38,6 +38,6 @@ public class TimeChannelGenerator {
 		m.addData("timestamp", System.currentTimeMillis());
 		m.addData("datetime", sdf.format(new Date()));
 
-		server.send(m);
+		server.getChannel(CHANNEL).send(m);
 	}
 }

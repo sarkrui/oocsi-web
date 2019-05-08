@@ -109,6 +109,15 @@ public class Application extends Controller {
 	}
 
 	/**
+	 * action to show OOCSI mote page
+	 * 
+	 * @return
+	 */
+	public Result mote() {
+		return ok(views.html.Application.mote.render("OOCSImote", "", request().host(), environment.isProd()));
+	}
+
+	/**
 	 * websocket connections end up here
 	 * 
 	 * @return
