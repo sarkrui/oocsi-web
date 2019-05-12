@@ -13,16 +13,25 @@
 		<script src="@routes.Assets.versioned("js/qrcode.min.js")" type="text/javascript"></script>
 		<script src="@routes.Assets.versioned("js/jsonc.min.js")" type="text/javascript"></script>
 		<script src="@routes.Assets.versioned("js/oocsi-web.min.js")" type="text/javascript"></script>
-		<!-- <script src="@routes.Assets.versioned("js/main.js")" type="text/javascript"></script> -->
 	</head>
 	<body>
 		<div class="container" class="grey">
 			<div class="row grey lighten-5">
 				<div class="col s12" style="text-align: right">
-					<h4 style="display: inline-block; width: 100%"><a href="#modalQR" id="openQRBtn" class="modal-trigger" style="color: black">OOCSImote</a></h4>
-					<a href="#modalConfiguration" class="btn-flat green modal-trigger"><i class="material-icons">wifi</i> connect</a>
-					<a href="#modalButton" class="btn-flat green lighten-3 modal-trigger"><i class="material-icons">add</i> button</a>
-					<a href="#modalSlider" class="btn-flat green lighten-3 modal-trigger"><i class="material-icons">add</i> slider</a>
+					<h4 style="display: inline-block; width: 100%">
+						<a href="#modalQR" id="openQRBtn" class="modal-trigger" style="color: black;float: left">
+							OOCSI<i>mote</i>
+						</a>
+						<a href="#modalConfiguration" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
+							<i class="material-icons">wifi</i> connect
+						</a>
+						<a href="#modalButton" class="btn-flat green lighten-3 modal-trigger hide-on-small-only" style="margin-left: 0.5em;">
+							<i class="material-icons">add</i> button
+						</a>
+						<a href="#modalSlider" class="btn-flat green lighten-3 modal-trigger hide-on-small-only" style="margin-left: 0.5em;">
+							<i class="material-icons">add</i> slider
+						</a>
+					</h4>
 				</div>
 			</div>
 			<div class="row">
@@ -57,6 +66,13 @@
 							<div class="input-field col s6">
 								<input id="oocsi_channel" type="text" class="validate">
 								<label for="oocsi_channel">OOCSI Channel</label>
+							</div>
+							<div class="col s6">
+								<br>
+								Generate code for this <i>mote</i>:
+								<br>
+								<a id="moteGenerateProcessingBtn" href="#">Processing</a>,
+								<a id="moteGenerateESP32Btn" href="#">ESP32</a>
 							</div>
 						</div>
 					</form>
@@ -153,6 +169,7 @@
 
 					var configuration = {
 						channel: "testchannel",
+						server: window.location.host,
 						platform: "ESP32" /* alternatives: ESP8266, Processing, Python, JS */,
 						controls: [{
 							type: "button",
@@ -164,8 +181,8 @@
 							name: "test slider",
 							par: "slider1",
 							min: 1,
-							max: 5,
-							def: 3
+							max: 100,
+							def: 45
 						}]
 					};
 
@@ -185,6 +202,11 @@
 						}
 					});
 
+					$('#oocsi_channel').change(function(e) {
+						configuration.channel = $(this).val();
+						e.preventDefault();
+					})
+
 					$('#progress').hide();
 
 					$('#openQRBtn').click(function(e) {
@@ -192,7 +214,7 @@
 
 						var compressedJSON = JSONC.pack(configuration, true);
 
-						var fullLink = 'http://' + window.location.host + "/?" + encodeURIComponent(JSON.stringify(compressedJSON));
+						var fullLink = 'http://' + window.location.host + window.location.pathname + "?" + encodeURIComponent(JSON.stringify(compressedJSON));
 						var qrcode = new QRCode("qrcode", {
 						    text: fullLink,
 						    width: 256,
@@ -208,7 +230,6 @@
 
 					$('#connectBtn').click(function(e) {
 						configuration.channel = $('#oocsi_channel').val();
-
 						if(configuration.channel.length > 3) {
 							// continue
 							$('#progress').show();
@@ -216,8 +237,6 @@
 
 							connect();
 						}
-
-
 						e.preventDefault();
 					});
 
@@ -247,6 +266,36 @@
 
 						addSlider(slider, configuration.controls.length);
 						configuration.controls.push(slider);
+						e.preventDefault();
+					});
+
+					$('#moteGenerateESP32Btn').click(function(e) {
+						configuration.platform = "ESP32";
+						$.ajax({
+						  type: "POST",
+						  url: "@routes.Codegen.generateOOCSIMoteCode",
+						  data: JSON.stringify(configuration),
+						  success: function(data) {
+							downloadFile("OOCSImote_" + configuration.channel.replace(/\\s/g, "_") + "_ESP32.ino", data);
+						  },
+						  contentType: "application/json"
+						});
+
+						e.preventDefault();
+					});
+					
+					$('#moteGenerateProcessingBtn').click(function(e) {
+						configuration.platform = "Processing";
+						$.ajax({
+						  type: "POST",
+						  url: "@routes.Codegen.generateOOCSIMoteCode",
+						  data: JSON.stringify(configuration),
+						  success: function(data) {
+							downloadFile("OOCSImote_" + configuration.channel.replace(/\\s/g, "_") + ".pde", data);
+						  },
+						  contentType: "application/json"
+						});
+
 						e.preventDefault();
 					});
 					
@@ -311,6 +360,20 @@
 						data[element.par] = value;
 						OOCSI.send(configuration.channel, data);
 					}
+
+					function downloadFile(filename, text) {
+						var element = document.createElement('a');
+						element.setAttribute('href', 'data:application/zip;charset=utf-8,' + encodeURIComponent(text));
+						element.setAttribute('download', filename);
+
+						element.style.display = 'none';
+						document.body.appendChild(element);
+
+						element.click();
+
+						document.body.removeChild(element);
+					}
+
 				});
 
 			</script>
