@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import akka.actor.ActorSystem;
 import nl.tue.id.oocsi.server.OOCSIServer;
+import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.protocol.Message;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
@@ -37,7 +38,10 @@ public class TestChannelGenerator {
 		m.addData("color", 90 + Math.round(Math.sin(frameCount / 20.) * 70));
 		m.addData("position", 90 + Math.round(Math.cos(frameCount / 25.) * 70));
 
-		server.getChannel(CHANNEL).send(m);
+		Channel channel = server.getChannel(CHANNEL);
+		if (channel != null) {
+			channel.send(m);
+		}
 
 		frameCount++;
 	}

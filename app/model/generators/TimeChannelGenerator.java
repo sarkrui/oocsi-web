@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import akka.actor.ActorSystem;
 import nl.tue.id.oocsi.server.OOCSIServer;
+import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.protocol.Message;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
@@ -38,6 +39,9 @@ public class TimeChannelGenerator {
 		m.addData("timestamp", System.currentTimeMillis());
 		m.addData("datetime", sdf.format(new Date()));
 
-		server.getChannel(CHANNEL).send(m);
+		Channel channel = server.getChannel(CHANNEL);
+		if (channel != null) {
+			channel.send(m);
+		}
 	}
 }
