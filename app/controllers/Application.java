@@ -75,7 +75,14 @@ public class Application extends Controller {
 	public Result index() {
 		String channels = server.getChannelList().replace("OOCSI_connections,", "").replace("OOCSI_clients,", "")
 				.replace("OOCSI_events,", "").replace("OOCSI_metrics,", "").replace("OSC,", "");
+		if (channels.length() > 160) {
+			channels = channels.substring(0, 160) + "...";
+		}
+
 		String clients = server.getClientList();
+		if (clients.length() > 160) {
+			clients = clients.substring(0, 160) + "...";
+		}
 
 		return ok(views.html.Application.index.render("index", "", request().host(), environment.isProd(), clients,
 				channels));
