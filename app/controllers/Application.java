@@ -125,6 +125,15 @@ public class Application extends Controller {
 	}
 
 	/**
+	 * action to show OOCSI mote sharing page
+	 * 
+	 * @return
+	 */
+	public Result moteShare() {
+		return ok(views.html.Application.moteShare.render("OOCSImote", "", request().host(), environment.isProd()));
+	}
+
+	/**
 	 * websocket connections end up here
 	 * 
 	 * @return
@@ -141,6 +150,52 @@ public class Application extends Controller {
 	 */
 	public Result channels() {
 		return ok(server.getChannelList());
+	}
+
+	/**
+	 * handle GET request to send a message to a channel
+	 * 
+	 * @param channel
+	 * @param data
+	 * @return
+	 */
+	public Result sendData(String channel, String data) {
+		if (channel == null || channel.trim().length() == 0) {
+			return badRequest("ERROR: channel missing");
+		} else if (server.getChannel(channel) == null) {
+			return notFound("ERROR: channel not found");
+		} else {
+			Message m = new Message("WEB-REQUEST", channel);
+			m.addData("parameter", data);
+			server.getChannel(channel).send(m);
+
+			return ok();
+		}
+	}
+
+	/**
+	 * track GET request to send a message to a channel
+	 * 
+	 * @param channel
+	 * @param data
+	 * @return
+	 */
+	public Result track(String channel, String data) {
+		if (channel == null || channel.trim().length() == 0) {
+			return badRequest("ERROR: channel missing");
+		} else if (server.getChannel(channel) == null) {
+			return notFound("ERROR: channel not found");
+		} else {
+			Message m = new Message("WEB-REQUEST", channel);
+			m.addData("parameter", data);
+			m.addData("User-Agent", request().header("User-Agent").orElse(""));
+			m.addData("Referer", request().header("Referer").orElse(""));
+			m.addData("Origin", request().header("Origin").orElse(""));
+
+			server.getChannel(channel).send(m);
+
+			return ok();
+		}
 	}
 
 	/**
@@ -227,7 +282,11 @@ public class Application extends Controller {
 	 * @return
 	 */
 	public CompletionStage<Result> serviceCall(String service, String call, String data) {
-		return internalServiceCall(service, call, data);
+		if (server.getChannel(service) != null) {
+			return internalServiceCall(service, call, data);
+		} else {
+			return CompletableFuture.completedFuture(notFound(service + " not found"));
+		}
 	}
 
 	/**
@@ -238,7 +297,11 @@ public class Application extends Controller {
 	 * @return
 	 */
 	public CompletionStage<Result> serviceCallPost(String service, String call) {
-		return internalServiceCall(service, call, request().body().asText());
+		if (server.getChannel(service) != null) {
+			return internalServiceCall(service, call, request().body().asText());
+		} else {
+			return CompletableFuture.completedFuture(notFound(service + " not found"));
+		}
 	}
 
 	/**

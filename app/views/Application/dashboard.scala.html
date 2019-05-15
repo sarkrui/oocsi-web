@@ -58,7 +58,7 @@
 		        </div>
 	        <div class="modal-footer">
 	            <a href="#!" class="modal-action modal-close waves-effect waves-red btn-flat">Cancel</a>
-	            <a href="#!" id="addChartBtn" class="modal-action modal-close waves-effect waves-green btn-flat">Add</a>
+	            <a href="#!" id="addChartBtn" class="modal-action modal-close waves-effect waves-green btn">Add</a>
 	        </div>
 	    </div>
 	</div>
@@ -69,8 +69,8 @@
 
 	   	// add add
 	   	$(document).ready(function(){
-    		// the "href" attribute of .modal-trigger must specify the modal ID that wants to be triggered
-    		$('.modal-trigger').leanModal();
+
+			$('.modal').modal();
 
 			// connect to OOCSI server
 			@if(secure) {
@@ -206,13 +206,15 @@
 				}
 			};
 
+			var channel = c.configuration.channel;
+
 			delete(c.configuration);
 	    	createCookie('charts', JSON.stringify(charts.map(function(d) {return d.configuration}).filter(function(d) {return d !== undefined})), 1);
 
-			if(channels[c.configuration.channel].length == 0) {
-				OOCSI.unsubscribe(c.configuration.channel);
-				delete(channels[c.configuration.channel]);
-			}
+			// if(channels[c.configuration.channel].length == 0) {
+			// 	OOCSI.unsubscribe(c.configuration.channel);
+			// 	delete(channels[c.configuration.channel]);
+			// }
 		}
 
 	   	$('#addChartBtn').click(function(e) {

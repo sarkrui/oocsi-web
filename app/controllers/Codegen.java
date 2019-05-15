@@ -33,6 +33,7 @@ public class Codegen extends Controller {
 		// get configuration aspects
 		List<Interactable> controls = new LinkedList<Interactable>();
 		String server = on.get("server").asText("SERVER ADDRESS");
+		server = server.replaceAll("[:][0-9]+", "");
 		String channel = on.get("channel").asText("testchannel");
 		String platform = on.get("platform").asText("ESP32");
 		ArrayNode an = (ArrayNode) on.get("controls");

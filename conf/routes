@@ -9,6 +9,7 @@ GET 	/dashboard						controllers.Application.dashboard
 GET 	/test							controllers.Application.test
 GET 	/metrics						controllers.Application.metrics
 GET 	/oocsimote						controllers.Application.mote
+GET 	/oocsimote/share				controllers.Application.moteShare
 
 POST 	/generateMoteCode				controllers.Codegen.generateOOCSIMoteCode
 
@@ -17,6 +18,8 @@ GET     /assets/*file               	controllers.Assets.versioned(path="/public"
 
 # REST API
 GET		/channels						controllers.Application.channels()
+GET 	/send/:channel/:data			controllers.Application.sendData(channel: String, data: String)
+GET 	/track/:channel/:data			controllers.Application.track(channel: String, data: String)
 POST	/send							controllers.Application.send(channel: String ?= "")
 POST	/send/							controllers.Application.send(channel: String ?= "")
 POST	/send/:channel					controllers.Application.send(channel)

@@ -19,18 +19,11 @@
 			<div class="row grey lighten-5">
 				<div class="col s12" style="text-align: right">
 					<h4 style="display: inline-block; width: 100%">
-						<span style="color: black;float: left">OOCSI<i>mote</i></span>
-						<a href="#modalQR" id="openQRBtn" class="btn-flat light-blue modal-trigger" style="margin-left: 0.5em;">
-							<i class="material-icons">airplay</i> play
+						<a href="#modalQR" id="openQRBtn" class="modal-trigger" style="color: black;float: left">
+							OOCSI<i>mote</i>
 						</a>
-						<a href="#modalConfiguration" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
-							<i class="material-icons">wifi</i> connect
-						</a>
-						<a href="#modalButton" class="btn-flat green lighten-3 modal-trigger hide-on-small-only" style="margin-left: 0.5em;">
-							<i class="material-icons">add</i> button
-						</a>
-						<a href="#modalSlider" class="btn-flat green lighten-3 modal-trigger hide-on-small-only" style="margin-left: 0.5em;">
-							<i class="material-icons">add</i> slider
+						<a href="#modalConfiguration" id="connectionBtn" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
+							<i class="material-icons">wifi</i> connection
 						</a>
 					</h4>
 				</div>
@@ -84,88 +77,12 @@
 				</div>
 			</div>
 
-			<!-- button -->
-			<div id="modalButton" class="modal bottom-sheet">
-				<div class="modal-content">
-					<h4>Add a button</h4>
-					
-					<form>
-						<div class="row">
-							<div class="input-field col s6">
-								<input id="nameBt" type="text" class="validate">
-								<label for="nameBt">Control name</label>
-							</div>
-							<div class="input-field col s6">
-								<input id="parBt" type="text" class="validate">
-								<label for="parBt">Parameter name</label>
-							</div>
-						</div>
-
-						<div class="row">
-							<div class="col s6">
-								<div class="switch">
-									<label>
-										Off
-										<input id="defBt" type="checkbox">
-										<span class="lever"></span>
-										On
-									</label>
-								</div>
-							</div>
-						</div>
-					</form>
-				</div>
-				<div class="modal-footer">
-					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
-					<a href="#!" id="addButtonBtn" class="modal-close waves-effect waves-green btn">Add button</a>
-				</div>
-			</div>
-
-			<!-- slider -->
-			<div id="modalSlider" class="modal bottom-sheet">
-				<div class="modal-content">
-					<h4>Add a slider</h4>
-					
-					<form>
-						<div class="row">
-							<div class="input-field col s6">
-								<input id="nameSl" type="text" class="validate">
-								<label for="nameSl">Control name</label>
-							</div>
-							<div class="input-field col s6">
-								<input id="parSl" type="text" class="validate">
-								<label for="parSl">Parameter name</label>
-							</div>
-						</div>
-
-						<div class="row">
-							<div class="input-field col s6">
-								<input id="minSl" type="number" class="validate">
-								<label for="minSl">Min</label>
-							</div>
-							<div class="input-field col s6">
-								<input id="maxSl" type="number" class="validate">
-								<label for="maxSl">Max</label>
-							</div>
-						</div>
-					</form>
-				</div>
-				<div class="modal-footer">
-					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
-					<a href="#!" id="addSliderBtn" class="modal-close waves-effect waves-green btn">Add slider</a>
-				</div>
-			</div>
-
 			<script type="text/javascript">				
 
 				$(document).ready(function() {
 					
 					$('.modal').modal();
 
-					// setTimeout(function() {
-					// 	M.AutoInit();		
-					// }, 200);
-				
 					// DEFAULT configuration
 
 					var configuration = {
@@ -208,14 +125,14 @@
 						e.preventDefault();
 					})
 
-					$('#progress').hide();
+					connect();
 
 					$('#openQRBtn').click(function(e) {
 						$('#qrcode').html('');
 
 						var compressedJSON = JSONC.pack(configuration, true);
 
-						var fullLink = 'http://' + window.location.host + window.location.pathname + "/share?" + encodeURIComponent(JSON.stringify(compressedJSON));
+						var fullLink = 'http://' + window.location.host + window.location.pathname + "?" + encodeURIComponent(JSON.stringify(compressedJSON));
 						var qrcode = new QRCode("qrcode", {
 						    text: fullLink,
 						    width: 256,
@@ -238,35 +155,6 @@
 
 							connect();
 						}
-						e.preventDefault();
-					});
-
-					$('#addButtonBtn').click(function(e) {
-
-						var button = {
-							type: "button",
-							name: $('#nameBt').val(),
-							par: $('#parBt').val(),
-							def: $('#defBt').prop('checked')
-						};
-
-						addButton(button, configuration.controls.length);
-						configuration.controls.push(button);
-						e.preventDefault();
-					});
-					$('#addSliderBtn').click(function(e) {
-
-						var slider = {
-							type: "slider",
-							name: $('#nameSl').val(),
-							par: $('#parSl').val(),
-							min: $('#minSl').val(),
-							max: $('#maxSl').val(),
-							def: $('#minSl').val()
-						};
-
-						addSlider(slider, configuration.controls.length);
-						configuration.controls.push(slider);
 						e.preventDefault();
 					});
 
@@ -351,7 +239,14 @@
 							$('#controlContainer').show();
 						}, 1000);
 
-						// OOCSI.subscribe(configuration.channel);
+						setInterval(function() {
+							// check connection
+							if(!OOCSI.isConnected()) {
+								$('#connectionBtn').addClass('red').removeClass('green');
+							} else {
+								$('#connectionBtn').removeClass('red').addClass('green');
+							}
+						}, 500);
 					}
 
 					function dispatch(element, value) {
