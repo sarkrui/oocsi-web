@@ -26,6 +26,9 @@
 						<a href="#modalConfiguration" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
 							<i class="material-icons">wifi</i> connect
 						</a>
+						<a href="#modalTrigger" class="btn-flat green lighten-3 modal-trigger hide-on-small-only" style="margin-left: 0.5em;">
+							<i class="material-icons">add</i> trigger
+						</a>
 						<a href="#modalButton" class="btn-flat green lighten-3 modal-trigger hide-on-small-only" style="margin-left: 0.5em;">
 							<i class="material-icons">add</i> button
 						</a>
@@ -81,6 +84,30 @@
 				<div class="modal-footer">
 					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
 					<a href="#!" id="connectBtn" class="modal-close waves-effect waves-green btn">Connect</a>
+				</div>
+			</div>
+
+			<!-- trigger -->
+			<div id="modalTrigger" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Add a trigger button</h4>
+					
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="nameTt" type="text" class="validate">
+								<label for="nameTt">Control name</label>
+							</div>
+							<div class="input-field col s6">
+								<input id="parTt" type="text" class="validate">
+								<label for="parTt">Parameter name</label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="addTriggerBtn" class="modal-close waves-effect waves-green btn">Add trigger button</a>
 				</div>
 			</div>
 
@@ -162,10 +189,6 @@
 					
 					$('.modal').modal();
 
-					// setTimeout(function() {
-					// 	M.AutoInit();		
-					// }, 200);
-				
 					// DEFAULT configuration
 
 					var configuration = {
@@ -184,6 +207,10 @@
 							min: 1,
 							max: 100,
 							def: 45
+						},{
+							type: "trigger",
+							name: "test trigger",
+							par: "trigger1"
 						}]
 					};
 
@@ -195,6 +222,9 @@
 
 					$('#oocsi_channel').val(configuration.channel);
 					configuration.controls.forEach(function(d, i) {
+						if(d.type=="trigger") {
+							addTrigger(d, i);
+						}
 						if(d.type=="button") {
 							addButton(d, i);
 						}
@@ -241,6 +271,18 @@
 						e.preventDefault();
 					});
 
+					$('#addTriggerBtn').click(function(e) {
+
+						var trigger = {
+							type: "trigger",
+							name: $('#nameTt').val(),
+							par: $('#parTt').val()
+						};
+
+						addTrigger(trigger, configuration.controls.length);
+						configuration.controls.push(trigger);
+						e.preventDefault();
+					});
 					$('#addButtonBtn').click(function(e) {
 
 						var button = {
@@ -300,6 +342,19 @@
 						e.preventDefault();
 					});
 					
+					function addTrigger(trigger, index) {
+						$('#controlContainer').append(generateTrigger(trigger, index));
+						$('#control'+ index).click(function(e) {
+							dispatch(trigger, true);
+							e.preventDefault();
+						});
+						$('#delBtn' + index).click(function(e) {
+							$('#control' + index).parent().parent().remove();
+							configuration.controls[index] = {};
+							e.preventDefault();
+						});
+					}
+
 					function addButton(button, index) {
 						$('#controlContainer').append(generateButton(button, index));
 						if(button.def) {
@@ -330,12 +385,16 @@
 						});
 					}
 
-					function generateSlider(slider, index) {
-						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + slider.name + '</label></div><div class="range-field col s8"><input type="range" id="control' + index + '" min="' + slider.min + '" max="' + slider.max + '" value="' + slider.def + '" /></div><div class="col m2 hide-on-small-only"><a  class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
+					function generateTrigger(trigger, index) {
+						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + trigger.name + '</label></div><div class="col s8"><a href="#" id="control' + index + '" class="btn">' + trigger.name + '</a></div><div class="col m2 hide-on-small-only"><a class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
 					}
 
 					function generateButton(button, index) {
 						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + button.name + '</label></div><div class="col s8"><div class="switch"><label>Off<input id="control' + index + '" type="checkbox"><span class="lever"></span>On</label></div></div><div class="col m2 hide-on-small-only"><a class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
+					}
+
+					function generateSlider(slider, index) {
+						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + slider.name + '</label></div><div class="range-field col s8"><input type="range" id="control' + index + '" min="' + slider.min + '" max="' + slider.max + '" value="' + slider.def + '" /></div><div class="col m2 hide-on-small-only"><a  class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
 					}
 
 					function connect() {
@@ -351,7 +410,14 @@
 							$('#controlContainer').show();
 						}, 1000);
 
-						// OOCSI.subscribe(configuration.channel);
+						setInterval(function() {
+							// check connection
+							if(!OOCSI.isConnected()) {
+								$('#connectionBtn').addClass('red').removeClass('green');
+							} else {
+								$('#connectionBtn').removeClass('red').addClass('green');
+							}
+						}, 500);
 					}
 
 					function dispatch(element, value) {

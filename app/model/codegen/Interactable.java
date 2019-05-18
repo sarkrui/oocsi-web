@@ -10,6 +10,10 @@ public class Interactable {
 	public int max;
 	public String def;
 
+	public boolean isTrigger() {
+		return type.equals("trigger");
+	}
+
 	public boolean isButton() {
 		return type.equals("button");
 	}

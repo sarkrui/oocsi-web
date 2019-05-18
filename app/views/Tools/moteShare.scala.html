@@ -101,6 +101,10 @@
 							min: 1,
 							max: 100,
 							def: 45
+						},{
+							type: "trigger",
+							name: "test trigger",
+							par: "trigger1"
 						}]
 					};
 
@@ -112,6 +116,9 @@
 
 					$('#oocsi_channel').val(configuration.channel);
 					configuration.controls.forEach(function(d, i) {
+						if(d.type=="trigger") {
+							addTrigger(d, i);
+						}
 						if(d.type=="button") {
 							addButton(d, i);
 						}
@@ -132,7 +139,7 @@
 
 						var compressedJSON = JSONC.pack(configuration, true);
 
-						var fullLink = 'http://' + window.location.host + window.location.pathname + "?" + encodeURIComponent(JSON.stringify(compressedJSON));
+						var fullLink = 'http://' + window.location.host + window.location.pathname + "/share?" + encodeURIComponent(JSON.stringify(compressedJSON));
 						var qrcode = new QRCode("qrcode", {
 						    text: fullLink,
 						    width: 256,
@@ -188,6 +195,19 @@
 						e.preventDefault();
 					});
 					
+					function addTrigger(trigger, index) {
+						$('#controlContainer').append(generateTrigger(trigger, index));
+						$('#control'+ index).click(function(e) {
+							dispatch(trigger, true);
+							e.preventDefault();
+						});
+						$('#delBtn' + index).click(function(e) {
+							$('#control' + index).parent().parent().remove();
+							configuration.controls[index] = {};
+							e.preventDefault();
+						});
+					}
+
 					function addButton(button, index) {
 						$('#controlContainer').append(generateButton(button, index));
 						if(button.def) {
@@ -218,12 +238,16 @@
 						});
 					}
 
-					function generateSlider(slider, index) {
-						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + slider.name + '</label></div><div class="range-field col s8"><input type="range" id="control' + index + '" min="' + slider.min + '" max="' + slider.max + '" value="' + slider.def + '" /></div><div class="col m2 hide-on-small-only"><a  class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
+					function generateTrigger(trigger, index) {
+						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + trigger.name + '</label></div><div class="col s8"><a href="#" id="control' + index + '" class="btn">' + trigger.name + '</a></div><div class="col m2 hide-on-small-only"><a class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
 					}
 
 					function generateButton(button, index) {
 						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + button.name + '</label></div><div class="col s8"><div class="switch"><label>Off<input id="control' + index + '" type="checkbox"><span class="lever"></span>On</label></div></div><div class="col m2 hide-on-small-only"><a class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
+					}
+
+					function generateSlider(slider, index) {
+						return '<div class="card row" style="padding: 2em;"><div class="col s4 m2"><label for="control' + index + '">' + slider.name + '</label></div><div class="range-field col s8"><input type="range" id="control' + index + '" min="' + slider.min + '" max="' + slider.max + '" value="' + slider.def + '" /></div><div class="col m2 hide-on-small-only"><a  class="btn-flat red-text" id="delBtn'+ index + '">delete</a></div></div>';
 					}
 
 					function connect() {

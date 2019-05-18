@@ -41,8 +41,17 @@ void draw() {
 void handleEvent(OOCSIEvent event) {
 
 @for(control <- controls) {
+@if(control.isTrigger()){  if(event.has("@control.par")) { trigger_@{control.getVarName()}(); }}
 @if(control.isButton()){  @control.getVarName() = event.getBoolean("@control.par", @control.getVarName());}
 @if(control.isSlider()){  @control.getVarName() = event.getInt("@control.par", @control.getVarName());}
 }
   lastUpdate = event.getTime();
+}
+
+@for(control <- controls) {
+@if(control.isTrigger()){  
+void trigger_@{control.getVarName()}() {
+  // your trigger code
+}
+}
 }
