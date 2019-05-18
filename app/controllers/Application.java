@@ -89,48 +89,12 @@ public class Application extends Controller {
 	}
 
 	/**
-	 * action to show a page to make your own dashboard
-	 * 
-	 * @return
-	 */
-	public Result dashboard() {
-		return ok(views.html.Application.dashboard.render("dashboard", "", request().host(), environment.isProd()));
-	}
-
-	/**
-	 * action to show a test page for websocket experiments with OOCSI
-	 * 
-	 * @return
-	 */
-	public Result test() {
-		return ok(views.html.Application.test.render("testing", "", request().host(), environment.isProd()));
-	}
-
-	/**
 	 * action to show server metrics page
 	 * 
 	 * @return
 	 */
 	public Result metrics() {
 		return ok(views.html.Application.metrics.render("metrics", "", request().host(), environment.isProd()));
-	}
-
-	/**
-	 * action to show OOCSI mote page
-	 * 
-	 * @return
-	 */
-	public Result mote() {
-		return ok(views.html.Application.mote.render("OOCSImote", "", request().host(), environment.isProd()));
-	}
-
-	/**
-	 * action to show OOCSI mote sharing page
-	 * 
-	 * @return
-	 */
-	public Result moteShare() {
-		return ok(views.html.Application.moteShare.render("OOCSImote", "", request().host(), environment.isProd()));
 	}
 
 	/**

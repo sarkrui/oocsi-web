@@ -5,11 +5,12 @@
 # Home page
 GET		/								controllers.Application.index
 GET		/ws								controllers.Application.ws
-GET 	/dashboard						controllers.Application.dashboard
-GET 	/test							controllers.Application.test
 GET 	/metrics						controllers.Application.metrics
-GET 	/oocsimote						controllers.Application.mote
-GET 	/oocsimote/share				controllers.Application.moteShare
+GET 	/test							controllers.Tools.test
+GET 	/dashboard						controllers.Tools.dashboard
+GET 	/oocsimote						controllers.Tools.mote
+GET 	/oocsimote/share				controllers.Tools.moteShare
+GET 	/animoocsi						controllers.Tools.animate
 
 POST 	/generateMoteCode				controllers.Codegen.generateOOCSIMoteCode
 

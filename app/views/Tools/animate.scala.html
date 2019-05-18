@@ -1,0 +1,418 @@
+@(message: String, title: String, address: String, secure: Boolean) 
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>animOOCSI</title>
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/materialize.min.css")">
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/main.css")">
+		<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+		<script src="@routes.Assets.versioned("js/jquery.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/materialize.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/qrcode.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/p5.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/p5.dom.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/jsonc.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/oocsi-web.min.js")" type="text/javascript"></script>
+	</head>
+	<body>
+		<div class="container" class="grey">
+			<div class="row grey lighten-5">
+				<div class="col s12" style="text-align: right">
+					<h4 style="display: inline-block; width: 100%">
+						<a href="#modalQR" id="openQRBtn" class="modal-trigger" style="color: black;float: left">
+							<i>anim</i>OOCSI
+						</a>
+						<a href="#modalConfiguration" id="connectionBtn" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
+							<i class="material-icons">wifi</i> connection
+						</a>
+						<a href="#" id="resetBtn" class="btn-flat red-text" style="margin-left: 0.5em;">
+							<i class="material-icons"></i> reset
+						</a>
+					</h4>
+				</div>
+			</div>
+			<div class="row">
+				<div id="progress" class="progress">
+					<div class="indeterminate"></div>
+				</div>
+				<div id="sketch-holder" class="col s12">
+				</div>
+				<div class="col s12">
+					<form>
+						<div class="row">
+							<div class="input-field col s6 m4">
+								<input id="minValue" type="number" class="validate">
+								<label for="minValue">output range min</label>
+							</div>
+							<div class="input-field col s6 m4">
+								<input id="maxValue" type="number" class="validate">
+								<label for="maxValue">output range max</label>
+							</div>
+							<div class="col s12 m4" style="padding: 1em;">
+								<a href="#" id="preset1" class="btn green darken-2">P1</a>
+								<a href="#" id="preset2" class="btn green darken-1">P2</a>
+								<a href="#" id="preset3" class="btn green">P3</a>
+								<a href="#" id="preset4" class="btn green lighten-1">P4</a>
+								<a href="#" id="preset5" class="btn green lighten-2">P5</a>
+							</div>
+						</div>
+						<div class="row">
+							<div class="input-field col s6 m4">
+								<input id="speedValue" type="number" class="validate">
+								<label for="speedValue">loop duration in seconds</label>
+							</div>
+							<div class="input-field col s6 m4">
+								<input id="distValue" type="number" class="validate">
+								<label for="distValue">pixel distance</label>
+							</div>
+							<div class="input-field col s6 m4">
+								<input id="parValue" type="text" class="validate">
+								<label for="parValue">event parameter name</label>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<!-- show connection info -->
+			<div id="modalQR" class="modal">
+				<div class="modal-content row">
+					<h4>Connect to this remote</h4>
+					<div id="qrcode" class="col s6"></div>
+					<div id="codelink" class="col s6 flow-text">
+						Use the QR code on the left or the link below to open this configuration of the OOCSImote in another browser window or on a mobile device. Then click the connect button to open a connection to the OOCSI server and start sending control events.
+						<a href="#" target="_blank" class="btn green">link</a>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">close</a>
+				</div>
+			</div>
+
+			<!-- configuration -->
+			<div id="modalConfiguration" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Connect</h4>
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="oocsi_channel" type="text" class="validate">
+								<label for="oocsi_channel">OOCSI Channel</label>
+							</div>
+							<div class="col s6">
+								<br>
+								Generate code for this <i>mote</i>:
+								<br>
+								<a id="moteGenerateProcessingBtn" href="#">Processing</a>,
+								<a id="moteGenerateESP32Btn" href="#">ESP32</a>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="connectBtn" class="modal-close waves-effect waves-green btn">Connect</a>
+				</div>
+			</div>
+
+			<script type="text/javascript">
+
+				var configuration = {
+					channel: "channel" + Math.round(Math.random()*10000),
+					server: window.location.host,
+					platform: "ESP32" /* alternatives: ESP8266, Processing, Python, JS */,
+					controls: [{
+						type: "slider",
+						name: "",
+						par: "",
+						min: 0,
+						max: 100,
+						def: 0,
+						speed: 15,
+						dist: 20
+					}],
+					preset: 0,
+					presets: [{points: []}, {points: []}, {points: []}, {points: []}, {points: []}],
+				};
+
+				var control = configuration.controls[0];
+
+				function setC(x, y) {
+					configuration.presets[configuration.preset].points[Math.round(map(x, 0, width, 0, 299))] = Math.round(y);
+				}
+
+				function getC(x) {
+					return configuration.presets[configuration.preset].points[Math.round(map(x, 0, width, 0, 299))];
+				}
+
+				var frame = 0;
+
+				function setup() {
+					var canvas = createCanvas($('#sketch-holder').width(), $('#sketch-holder').width()/2);
+					canvas.parent('sketch-holder');
+					background(255);
+					noStroke();
+
+					for (var i = 0; i < 300; i++) {
+						configuration.presets[0].points.push(-1);
+						configuration.presets[1].points.push(-1);
+						configuration.presets[2].points.push(-1);
+						configuration.presets[3].points.push(-1);
+						configuration.presets[4].points.push(-1);
+					}
+				}
+
+				function windowResized() {
+ 					resizeCanvas($('#sketch-holder').width(), height);
+				}
+
+				function draw() {
+
+					// next frame
+					let increment = Math.round(width / (control.speed * frameRate()));
+					frame += increment;
+					if(frame > width) {
+						frame = 0;
+					}
+
+					// canvas + reset area
+					background(255);
+					fill(200, 200, 255);
+					noStroke();
+					rect(0, height-50, width, 50);
+
+					// current frame indicator
+					fill(0);
+					stroke(255, 200, 200);
+					line(frame % width, 0, frame % width, height);
+
+					// all points and lines
+					var px = -1;
+					var py = -1;
+					var dispatched = false;
+					for (var i = 0; i < width; i++) {
+						let y = getC(i)
+						if(y > -1) {
+							let v1 = createVector(px, py);
+							let v2 = createVector(i, y);
+							if(v1.dist(v2) < control.dist) {
+								noStroke();
+								fill(200);
+								ellipse(i, y, 2, 2);
+							} else {
+								if(px > -1 && py > -1) {
+									stroke(120);
+									line(px, py, i, y);
+								}
+								noStroke();
+								fill(0);
+								ellipse(i, y, 3, 3);
+
+								// check whether to send value
+								if(!dispatched && frame-increment*2 < i && i < frame+increment ) {
+									fill(0, 50);
+									ellipse(i, y, 10, 10);
+									dispatchToOOCSI(Math.round(map(y, height-50, 0, control.min, control.max)));
+									dispatched = true;
+								}
+
+								px = i;
+								py = y;
+							}
+						}
+					}
+
+					if(mouseIsPressed) {
+						setC(mouseX, mouseY < height - 50 ? mouseY : -1);
+					}
+				}
+
+				var lastDispatchedValue = -1;
+				function dispatchToOOCSI(y) {
+					if(y != lastDispatchedValue && control.par !== undefined && control.par != "") {
+						lastDispatchedValue = y;
+
+						if(OOCSI.isConnected()) {
+							var data = {};
+							data[control.par] = y;
+							OOCSI.send(configuration.channel, data);
+
+							// send to OOCSI
+							console.log("send out " + y + " as " + configuration.channel + "." + control.par)
+						}
+					}
+				}
+
+				$(document).ready(function() {
+					
+					$('.modal').modal();
+
+					// // obtain configuration from URL
+					// if(window.location.search.length > 1) {
+					// 	var compressedConfig = decodeURIComponent(window.location.search.substring(1));
+					// 	configuration = JSONC.unpack(compressedConfig, true);
+					// }
+
+					$('#oocsi_channel').val(configuration.channel);
+					$('#minValue').val(control.min);
+					$('#maxValue').val(control.max);
+					$('#speedValue').val(control.speed);
+					$('#distValue').val(control.dist);
+					$('#parValue').val(control.par);
+
+					$('#minValue').change(function(e) {
+						control.min = parseInt($(this).val());
+						e.preventDefault();
+					})
+					$('#maxValue').change(function(e) {
+						control.max = parseInt($(this).val());
+						e.preventDefault();
+					})
+					$('#speedValue').change(function(e) {
+						control.speed = parseInt($(this).val());
+						e.preventDefault();
+					})
+					$('#distValue').change(function(e) {
+						control.dist = parseInt($(this).val());
+						e.preventDefault();
+					})
+					$('#parValue').change(function(e) {
+						control.par = $(this).val();
+						e.preventDefault();
+					})
+
+					$('#preset1').click(function(e) {
+						configuration.preset = 0;
+						e.preventDefault();
+					})
+					$('#preset2').click(function(e) {
+						configuration.preset = 1;
+						e.preventDefault();
+					})
+					$('#preset3').click(function(e) {
+						configuration.preset = 2;
+						e.preventDefault();
+					})
+					$('#preset4').click(function(e) {
+						configuration.preset = 3;
+						e.preventDefault();
+					})
+					$('#preset5').click(function(e) {
+						configuration.preset = 4;
+						e.preventDefault();
+					})
+
+					connect();
+
+					$('#openQRBtn').click(function(e) {
+						$('#qrcode').html('');
+
+						var compressedJSON = JSONC.pack(configuration, true);
+
+						var fullLink = 'http://' + window.location.host + window.location.pathname + "?" + encodeURIComponent(JSON.stringify(compressedJSON));
+						var qrcode = new QRCode("qrcode", {
+						    text: fullLink,
+						    width: 256,
+						    height: 256,
+						    colorDark : "#000000",
+						    colorLight : "#ffffff",
+						    correctLevel : QRCode.CorrectLevel.H
+						});
+						$('#codelink a').prop("href", fullLink);
+
+						e.preventDefault();
+					});
+
+					$('#resetBtn').click(function(e) {
+						configuration.presets[configuration.preset].points = [];
+
+						for (var i = 0; i < 300; i++) {
+							configuration.presets[configuration.preset].points.push(-1);
+						}
+						e.preventDefault();
+					});
+
+					$('#connectBtn').click(function(e) {
+						configuration.channel = $('#oocsi_channel').val();
+						if(configuration.channel.length > 3) {
+							// continue
+							$('#progress').show();
+							$('#sketch-holder').hide();
+
+							connect();
+						}
+						e.preventDefault();
+					});
+
+					$('#moteGenerateESP32Btn').click(function(e) {
+						configuration.platform = "ESP32";
+						$.ajax({
+						  type: "POST",
+						  url: "@routes.Codegen.generateOOCSIMoteCode",
+						  data: JSON.stringify(configuration),
+						  success: function(data) {
+							downloadFile("OOCSImote_" + configuration.channel.replace(/\\s/g, "_") + "_ESP32.ino", data);
+						  },
+						  contentType: "application/json"
+						});
+						e.preventDefault();
+					});
+					
+					$('#moteGenerateProcessingBtn').click(function(e) {
+						configuration.platform = "Processing";
+						$.ajax({
+						  type: "POST",
+						  url: "@routes.Codegen.generateOOCSIMoteCode",
+						  data: JSON.stringify(configuration),
+						  success: function(data) {
+							downloadFile("OOCSImote_" + configuration.channel.replace(/\\s/g, "_") + ".pde", data);
+						  },
+						  contentType: "application/json"
+						});
+						e.preventDefault();
+					});
+
+					function connect() {
+						// connect to OOCSI server
+						@if(secure) {
+							OOCSI.connect("wss://" + window.location.host + "/ws");
+						} else {
+							OOCSI.connect("ws://" + window.location.host + "/ws");
+						}
+
+						setTimeout(function() {
+							$('#progress').hide();
+							$('#sketch-holder').show();
+						}, 1000);
+
+						setInterval(function() {
+							// check connection
+							if(!OOCSI.isConnected()) {
+								$('#connectionBtn').addClass('red').removeClass('green');
+							} else {
+								$('#connectionBtn').removeClass('red').addClass('green');
+							}
+						}, 500);
+					}
+
+					function downloadFile(filename, text) {
+						var element = document.createElement('a');
+						element.setAttribute('href', 'data:application/zip;charset=utf-8,' + encodeURIComponent(text));
+						element.setAttribute('download', filename);
+
+						element.style.display = 'none';
+						document.body.appendChild(element);
+
+						element.click();
+
+						document.body.removeChild(element);
+					}
+
+				});
+
+			</script>
+		</div>
+	</body>
+</html>

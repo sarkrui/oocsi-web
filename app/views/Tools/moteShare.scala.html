@@ -208,7 +208,7 @@
 					function addSlider(slider, index) {
 						$('#controlContainer').append(generateSlider(slider, index));
 						$('#control'+ index).on("input", function(e) {
-							dispatch(slider, $(this).val());
+							dispatch(slider, parseInt($(this).val()));
 							e.preventDefault();
 						});
 						$('#delBtn' + index).click(function(e) {

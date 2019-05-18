@@ -71,8 +71,8 @@ void loop() {
 void processOOCSI() {
 
 @for(control <- controls) {
-@if(control.isButton()){  @control.getVarName() = oocsi.getBool("@control.par", false);}
-@if(control.isSlider()){  @control.getVarName() = oocsi.getInt("@control.par", -1);}
+@if(control.isButton()){  @control.getVarName() = oocsi.getBool("@control.par", @control.getVarName());}
+@if(control.isSlider()){  @control.getVarName() = oocsi.getInt("@control.par", @control.getVarName());}
 }
   lastUpdate = oocsi.getTimeStamp();
 }
