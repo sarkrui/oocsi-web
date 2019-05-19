@@ -1,0 +1,474 @@
+@(message: String, title: String, address: String, secure: Boolean) 
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>IoTsim web</title>
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/materialize.min.css")">
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/main.css")">
+		<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+		<script src="@routes.Assets.versioned("js/jquery.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/materialize.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/qrcode.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/vega.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/oocsi-web.min.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <div class="container" class="grey">
+        	<div class="row grey lighten-5" style="text-align: right">
+ 				<h4>
+					<a class="modal-trigger" style="color: black;float: left">
+						IoTsim web
+					</a>
+
+					<a href="#modalData" id="dataBtn" class="btn-flat green lighten-2 modal-trigger" style="margin-left: 0.5em;">
+						<i class="material-icons">sync</i> load data
+					</a>
+					<a href="#modalConfiguration" id="connectionBtn" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
+						<i class="material-icons">wifi</i> connection
+					</a>
+<!-- 					<a href="#" id="resetBtn" class="btn-flat red-text" style="margin-left: 0.5em;">
+						<i class="material-icons"></i> reset
+					</a>
+ --> 			</h4>
+			</div>
+
+			<div class="row">
+        		<div class="col s12">
+		        	<div class="progress">
+						<div class="indeterminate"></div>
+					</div>
+		        </div>
+		        <div class="col s12">
+		        	<br>
+		        	<br>
+
+		        	<form>
+						<div class="row">
+							<div class="col s6 m4">
+								<a id="playBtn" class="btn"><i class="material-icons">play_arrow</i></a>
+								<a id="pauseBtn" class="btn"><i class="material-icons">pause</i></a>
+							</div>
+							<div class="input-field col s6 m4">
+								<input id="speedValue" type="number" class="validate">
+								<label for="speedValue">real-world seconds per simulation second</label>
+							</div>
+							<div class="input-field col s6 m4">
+								<input id="parValue" type="text" class="validate">
+								<label for="parValue">event parameter name</label>
+							</div>
+						</div>
+					</form>		        	
+		        </div>
+	        	<br>
+		    </div>
+
+        	<div class="row" style="user-select: none">
+	        	<div class="col s12 center-align">
+		        	<div id="visu" class="">
+		        	</div>
+				</div>
+        	</div>
+
+			<!-- data -->
+			<div id="modalData" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Data</h4>
+					<form>
+						<div class="row">
+				        	<div style="height: 260px; margin: 10px auto;">
+				        		<textarea></textarea>
+				        	</div>
+
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="loadDataBtn" class="modal-close waves-effect waves-green btn">Load</a>
+				</div>
+			</div>
+
+			<!-- configuration -->
+			<div id="modalConfiguration" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Connect</h4>
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="oocsi_channel" type="text" class="validate">
+								<label for="oocsi_channel">OOCSI Channel</label>
+							</div>
+							<div class="col s6">
+								<br>
+								Generate code for this <i>mote</i>:
+								<br>
+								<a id="moteGenerateProcessingBtn" href="#">Processing</a>,
+								<a id="moteGenerateESP32Btn" href="#">ESP32</a>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="connectBtn" class="modal-close waves-effect waves-green btn">Connect</a>
+				</div>
+			</div>
+
+		<script type="text/javascript">
+
+			var configuration = {
+				channel: "",
+				speed: 3600
+			};
+
+			$(document).ready(function() {
+					
+				$('.modal').modal();
+				$('.progress').hide();
+
+				$('#loadDataBtn').click(function(e) {
+					
+					console.log("parsing the data in the textarea");
+
+					e.preventDefault();
+					return false;
+				})
+
+				$('#speedValue').val(configuration.speed);
+				$('#speedValue').change(function(e) {
+					configuration.speed = parseInt($('#speedValue').val());
+
+					e.preventDefault();
+					return false;
+				})
+
+				$('#connectBtn').click(function(e) {
+					configuration.channel = $('#oocsi_channel').val();
+					configuration.speed = parseInt($('#speedValue').val());
+
+					if(configuration.channel.length > 3) {
+						// continue
+						$('#progress').show();
+
+						connect();
+					}
+
+					e.preventDefault();
+					return false;
+				})
+			});
+
+			//////////////////////////////////////////////////////////////////////////////
+
+			var rulers = [];
+			var dataSpec = {
+			    $schema: 'https://vega.github.io/schema/vega-lite/v3.json',
+			    // description: 'Dataset activity visualisation',
+			    data: {
+			      "url": "@routes.Assets.versioned("data/simplehome_ts.csv")",
+			      "format": { "type": "csv"}
+			    },
+			    transform: [
+			    	{
+			    		"calculate": "datum.ts", "as": "timestamp1"
+			    	},
+			    	{
+			    		"window" : [{
+			    			"op": "max",
+			    			"field": "ts",
+			    			"as": "timestamp2"
+			    		}],
+			    		"groupby": ["personName"],
+			    		"frame": [0,1]
+			    	}
+			    ],
+				"vconcat": [
+				{
+					"layer": [
+					  {
+					    width: 800,
+					    height: 250,
+					    mark: 'bar',
+					    selection: {
+						    "org": {
+						      "type": "single",
+						      "on": "click"
+					    	}
+						},
+					    encoding: {
+					      x: {
+					      	timeUnit: "hoursminutesseconds",
+					      	field: "timestamp1",
+					      	sort: {
+					      		"field": "timestamp1",
+					      		"order": "ascending"
+					      	},
+					      	type: 'quantitative',
+					      	scale: {"domain": {"selection": "brush"}},
+					      	axis: {
+					      		labels: false,
+					      		title: null
+					      	}
+					  	  },
+					      x2: {
+					      	timeUnit: "hoursminutesseconds",
+					      	field: 'timestamp2',
+					      	type: 'quantitative',
+					      	scale: {"domain": {"selection": "brush"}},
+					      	axis: {
+					      		labels: false,
+					      		title: null
+					      	}
+					  	  },
+					  	  y: {
+					  	  	field: "location",
+					  	  	type: "nominal"
+					  	  },
+					  	  row: {
+      						field: "personName",
+      						type: "nominal"
+    					  },
+					      color: {
+					      	field: "task",
+					      	type: "nominal"
+					      },
+					      opacity: {
+						      condition: {
+						        "selection": "org",
+						        "value": 1
+						      },
+						      value: 0.4,
+							  axis: {title: null}
+					      }
+					    }
+					  },{
+					    width: 800,
+					    height: 50,
+					    "data": { "values": rulers},
+					    "mark": "rule",
+					    "encoding": {
+					      "x": {
+					      	"timeUnit": "hoursminutesseconds",
+					        "field": "x",
+					        "type": "quantitative",
+					       	"scale": {"domain": {"selection": "brush"}}
+					      },
+					      "color": {"value": "red"},
+					      "size": {"value": 2}
+					    }
+					  }
+					]
+				},{
+					"layer": [
+					  {
+					    width: 800,
+					    height: 100,
+					    mark: 'bar',
+					    selection: {
+						    "org": {
+						      "type": "single",
+						      "on": "click"
+					    	}
+						},
+					    encoding: {
+					      x: {
+					      	timeUnit: "hoursminutesseconds",
+					      	field: "timestamp1",
+					      	sort: {
+					      		"field": "timestamp1",
+					      		"order": "ascending"
+					      	},
+					      	type: 'quantitative',
+					      	scale: {"domain": {"selection": "brush"}},
+					      	axis: {
+					      		labels: false,
+					      		title: null
+					      	}
+					  	  },
+					      x2: {
+					      	timeUnit: "hoursminutesseconds",
+					      	field: 'timestamp2',
+					      	type: 'quantitative',
+					      	scale: {"domain": {"selection": "brush"}},
+					      	axis: {
+					      		labels: false,
+					      		title: null
+					      	}
+					  	  },
+					  	  y: {
+					  	  	field: "personName",
+					  	  	type: "nominal"
+					  	  },
+					      color: {
+					      	field: "task",
+					      	type: "nominal"
+					      },
+					      opacity: {
+						      condition: {
+						        "selection": "org",
+						        "value": 1
+						      },
+						      value: 0.4,
+							  axis: {title: null}
+					      }
+					    }
+					  },{
+					    width: 800,
+					    height: 50,
+					    "data": { "values": rulers},
+					    "mark": "rule",
+					    "encoding": {
+					      "x": {
+					      	"timeUnit": "hoursminutesseconds",
+					        "field": "x",
+					        "type": "quantitative",
+					       	"scale": {"domain": {"selection": "brush"}}
+					      },
+					      "color": {"value": "red"},
+					      "size": {"value": 2}
+					    }
+					  }
+					]
+				},{
+				    width: 800,
+				    height: 50,
+				    mark: 'area',
+				    selection: {
+	      				"brush": {
+	      					"type": "interval",
+	      					"encodings": ["x"]
+	      				}
+	    			},
+				    encoding: {
+				      x: {
+				      	timeUnit: "hoursminutesseconds",
+				      	field: 'timestamp1',
+				      	type: 'quantitative'
+				      },
+				      y: {
+				      	aggregate: 'count',
+				      	field: 'task',
+				      	type: 'quantitative',
+				      	axis: {
+				      		labels: false, 
+				      		title: null
+				      	}
+				      },
+				      color: {
+				      	value: "#00b3ff"
+				      },
+				      opacity: {
+				      	value: 0.4
+				      }
+				    }
+				}
+				]
+			  };
+
+			var view;
+			var globalIndex = 0;
+			var data_0index = 0;
+			var data_0length = 0;
+
+			var currData = [];
+
+			vegaEmbed('#visu', dataSpec).then(function(vega) {
+				view = vega.view;
+
+				setTimeout(function(e) {
+					currData = view.data('data_1');
+					currData.sort(function(a,b) {return new Date(a.ts) - new Date(b.ts)});			
+				}, 500);
+
+				$('details').hide();
+				$('.modal').modal();
+			});
+
+			$('#prevPhoto').click(function(e) {
+				data_0length = view.data('data_0').length;
+
+				data_0index = (data_0index - 1 + data_0length) % data_0length;
+				showEvent(view.data('data_0')[data_0index]);
+
+				e.preventDefault();
+				return false;
+			});
+
+			$('#nextPhoto').click(function(e) {
+				data_0length = view.data('data_0').length;
+
+				data_0index = (data_0index + 1 + data_0length) % data_0length;
+				showEvent(view.data('data_0')[data_0index]);
+
+				e.preventDefault();
+				return false;
+			});
+
+			$('#playBtn').removeClass("disabled");
+			$('#pauseBtn').addClass("disabled");
+
+			$('#playBtn').click(function(e) {
+
+				$('#playBtn').addClass("disabled");
+				$('#pauseBtn').removeClass("disabled");
+
+				scheduleNextPhoto();
+
+				e.preventDefault();
+				return false;
+			});
+
+			$('#pauseBtn').click(function(e) {
+
+				$('#playBtn').removeClass("disabled");
+				$('#pauseBtn').addClass("disabled");
+
+				if(scheduler) {
+					clearTimeout(scheduler);
+				}
+
+				e.preventDefault();
+				return false;
+			});
+
+			var index = -1;
+			var scheduler;
+			function scheduleNextPhoto() {
+				let length = currData.length;
+
+				index = (index + 1 + length) % length;
+				index2 = (index + 1 + length) % length;
+				jQuery('.determinate').css('width', (100 * index/length) + '%');
+
+				let thisEvent = currData[index];
+				let nextEvent = currData[index2];
+				
+				showEvent(thisEvent);
+
+				let duration = (new Date(nextEvent.timestamp1) - new Date(thisEvent.timestamp1));
+				scheduler = setTimeout(scheduleNextPhoto, duration / configuration.speed);
+
+				return false;				
+			}
+
+			function showEvent(d) {
+				if(!d) {
+					return;
+				}
+
+				if(view.data('source_1').length == 0) {
+					var changeset = vega.changeset().insert({x: new Date(d.timestamp1)})
+					view.change('source_1', changeset).run();
+				} else {
+					var changeset = vega.changeset().modify(view.data('source_1')[0], "x", new Date(d.timestamp1))
+					view.change('source_1', changeset).run();
+				}
+			}
+
+		</script>
+
+        </div>
+    </body>
+</html>

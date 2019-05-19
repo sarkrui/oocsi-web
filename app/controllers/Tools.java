@@ -61,4 +61,13 @@ public class Tools extends Controller {
 		return ok(views.html.Tools.animate.render("animOOCSI", "", request().host(), environment.isProd()));
 	}
 
+	/**
+	 * action to show the IoTsim page
+	 * 
+	 * @return
+	 */
+	public Result iotsim() {
+		return ok(views.html.Tools.iotsim.render("IoTsim", "", request().host(), environment.isProd()));
+	}
+
 }
