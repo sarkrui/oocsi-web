@@ -51,11 +51,11 @@
 								<label for="maxValue">output range max</label>
 							</div>
 							<div class="col s12 m4" style="padding: 1em;">
-								<a href="#" id="preset1" class="btn green darken-2">P1</a>
-								<a href="#" id="preset2" class="btn green darken-1">P2</a>
-								<a href="#" id="preset3" class="btn green">P3</a>
-								<a href="#" id="preset4" class="btn green lighten-1">P4</a>
-								<a href="#" id="preset5" class="btn green lighten-2">P5</a>
+								<a href="#" id="preset1" class="btn green darken-2" style="margin-top: 0.5em">P1</a>
+								<a href="#" id="preset2" class="btn green darken-1" style="margin-top: 0.5em">P2</a>
+								<a href="#" id="preset3" class="btn green" style="margin-top: 0.5em">P3</a>
+								<a href="#" id="preset4" class="btn green lighten-1" style="margin-top: 0.5em">P4</a>
+								<a href="#" id="preset5" class="btn green lighten-2" style="margin-top: 0.5em">P5</a>
 							</div>
 						</div>
 						<div class="row">
@@ -223,10 +223,11 @@
 							}
 						}
 					}
+				}
 
-					if(mouseIsPressed) {
-						setC(mouseX, mouseY < height - 50 ? mouseY : -1);
-					}
+				function touchMoved(e) {
+					setC(mouseX, mouseY < height - 50 ? mouseY : -1);
+					return false;
 				}
 
 				var lastDispatchedValue = -1;
