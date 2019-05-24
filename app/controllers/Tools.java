@@ -22,7 +22,7 @@ public class Tools extends Controller {
 	 * @return
 	 */
 	public Result dashboard() {
-		return ok(views.html.Application.dashboard.render("dashboard", "", request().host(), environment.isProd()));
+		return ok(views.html.Tools.dashboard.render("dashboard", "", request().host(), environment.isProd()));
 	}
 
 	/**

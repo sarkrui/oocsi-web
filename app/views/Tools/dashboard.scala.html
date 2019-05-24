@@ -151,7 +151,9 @@
 				    	for (var i = 0; i < channels[channel].length; i++) {
 				    		var selector = channels[channel][i];
 				    		var value = eval('e.data.' + selector.selector);
-					    	updateChart(selector.index, value);
+				    		if(value !== undefined) {
+					    		updateChart(selector.index, value);
+					    	}
 				    	};
 					}
 			    });
