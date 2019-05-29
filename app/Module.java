@@ -9,7 +9,7 @@ public class Module extends AbstractModule {
 	@Override
 	protected void configure() {
 		try {
-			bind(OOCSIServer.class).toInstance(new OOCSIServer(4444, 200, true) {
+			bind(OOCSIServer.class).toInstance(new OOCSIServer(4444, 1000, true) {
 				@Override
 				protected void internalLog(String message) {
 					play.Logger.info(message);

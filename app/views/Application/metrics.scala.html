@@ -1,14 +1,13 @@
 @(message: String, title: String, address: String, secure: Boolean) 
 
-@main("Running Metrics") { 
+@main("OOCSI Server Metrics") { 
 
 	  <nav>
 	    <div class="nav-wrapper blue lighten-3">
 	      <a href="/" class="brand-logo" style="padding: 0 1em">OOCSI</a>
 	      <ul id="nav-mobile" class="right hide-on-med-and-down">
-			<li class="active"><a href="/metrics">Metrics <i class="material-icons right">save</i></a></li>
-			<li><a href="/dashboard">Dashboard <i class="material-icons right">save</i></a></li>
-        	<li><a href="/test">Test <i class="material-icons right">settings</i></a></li>        	
+			<li class="active"><a href="/metrics">Metrics <i class="material-icons right">insert_chart</i></a></li>
+			<li><a href="/dashboard">Dashboard <i class="material-icons right">insert_chart</i></a></li>
 	      </ul>
 	    </div>
 	  </nav>
@@ -50,6 +49,9 @@
 	    // add chart function
 	    function addChart(channel, selector) {
 
+	    	var container = document.getElementById("chartsContainer");
+	    	var elementWidth = container.offsetWidth;
+
 	    	// prepare chart
 	    	var newChart = {
 				configuration: {
@@ -62,9 +64,10 @@
 					title: "",
 			        //description: "This is a simple line chart. You can remove the area portion by adding area: false to the arguments list.",
 			        data: [],
-			        width: 800,
-			        height: 200,
-			        right: 40,
+			        width: elementWidth * 0.9,
+			        height: elementWidth * 0.2,
+			        left: 10,
+			        right: 20,
 			        interpolate: 'linear',
 			        transition_on_update: false,
 			        target: document.getElementById('red-channel'),
@@ -100,15 +103,15 @@
 				    	for (var i = 0; i < channels[channel].length; i++) {
 				    		var selector = channels[channel][i];
 				    		var value = eval('e.data.' + selector.selector);
-					    	updateChart(selector.index, value);
+				    		if(value !== undefined) {
+						    	updateChart(selector.index, value);
+						    }
 				    	};
 					}
 			    });
 			} else {
 				channels[channel].push({selector: selector, index: charts.length - 1});
 			}
-
-	    	//updateChart(charts.length - 1, 0);
     	}
 	    
 	    // chart update function
@@ -133,9 +136,6 @@
 				chartData.shift();
 			}
 			
-			// convert?
-	    	//chartSpec.data = MG.convert.date(chartData, 'date');
-	    	
 	    	// update chart
 	    	chartSpec.data = chartData;
 	    	delete chartSpec.xax_format;
