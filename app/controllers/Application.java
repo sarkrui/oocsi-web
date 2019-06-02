@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.typesafe.config.Config;
@@ -25,6 +27,7 @@ import play.Logger;
 import play.data.DynamicForm;
 import play.data.FormFactory;
 import play.inject.ApplicationLifecycle;
+import play.libs.Json;
 import play.libs.streams.ActorFlow;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -95,6 +98,58 @@ public class Application extends Controller {
 	 */
 	public Result metrics() {
 		return ok(views.html.Application.metrics.render("metrics", "", request().host(), environment.isProd()));
+	}
+
+	/**
+	 * action to show server network page
+	 * 
+	 * @return
+	 */
+	public Result network() {
+		return ok(views.html.Application.network.render("network", "", request().host(), environment.isProd()));
+	}
+
+	/**
+	 * retrieve the network of OOCSI connected clients and channels
+	 * 
+	 * @return
+	 */
+	public Result netJson() {
+
+		ObjectNode on = Json.newObject();
+		ArrayNode nodes = on.putArray("nodes");
+		ArrayNode links = on.putArray("links");
+		for (Channel c : server.getChannels()) {
+			if (!c.isPrivate() && !c.getName().startsWith("OOCSI_")) {
+				ObjectNode node = Json.newObject();
+				node.put("id", c.getName());
+				node.put("group", c instanceof Client ? 2 : 1);
+				nodes.add(node);
+
+				ObjectNode link = Json.newObject();
+				link.put("source", "OOCSI Server");
+				link.put("target", c.getName());
+				link.put("value", (c instanceof Client ? 5 : 1) + c.getChannels().size());
+				links.add(link);
+
+				for (Channel c1 : c.getChannels()) {
+					ObjectNode link1 = Json.newObject();
+					link1.put("source", c.getName());
+					link1.put("target", c1.getName());
+					link1.put("value", 1 + c1.getChannels().size());
+					links.add(link1);
+				}
+			}
+		}
+
+		{
+			ObjectNode serverNode = Json.newObject();
+			serverNode.put("id", "OOCSI Server");
+			serverNode.put("group", 0);
+			nodes.add(serverNode);
+		}
+
+		return ok(on).as("application/json");
 	}
 
 	/**

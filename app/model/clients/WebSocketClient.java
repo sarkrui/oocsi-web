@@ -106,7 +106,38 @@ public class WebSocketClient extends Client {
 									map.put(entry.getKey(), object.toString());
 								} else if (val.isArray()) {
 									ArrayNode array = (ArrayNode) val;
-									map.put(entry.getKey(), array.toString());
+									JsonNode jnn = array.get(0);
+									if (jnn.isBoolean()) {
+										// proceed with boolean array
+										boolean[] ba = new boolean[array.size()];
+										for (int i = 0; i < array.size(); i++) {
+											ba[i] = array.get(i).asBoolean();
+										}
+										map.put(entry.getKey(), ba);
+									} else if (jnn.isInt() || jnn.isLong()) {
+										// proceed with int array
+										int[] ba = new int[array.size()];
+										for (int i = 0; i < array.size(); i++) {
+											ba[i] = array.get(i).asInt();
+										}
+										map.put(entry.getKey(), ba);
+									} else if (jnn.isFloat() || jnn.isDouble()) {
+										// proceed with float array
+										double[] ba = new double[array.size()];
+										for (int i = 0; i < array.size(); i++) {
+											ba[i] = array.get(i).asDouble();
+										}
+										map.put(entry.getKey(), ba);
+									} else if (jnn.isTextual()) {
+										// proceed with string array
+										String[] ba = new String[array.size()];
+										for (int i = 0; i < array.size(); i++) {
+											ba[i] = array.get(i).asText();
+										}
+										map.put(entry.getKey(), ba);
+									} else {
+										map.put(entry.getKey(), array.toString());
+									}
 								}
 							}
 							c.send(new Message(token, recipient, new Date(), map));

@@ -6,6 +6,10 @@
 GET		/								controllers.Application.index
 GET		/ws								controllers.Application.ws
 GET 	/metrics						controllers.Application.metrics
+GET 	/network.json					controllers.Application.netJson
+GET 	/network						controllers.Application.network
+
+# Tools
 GET 	/test							controllers.Tools.test
 GET 	/dashboard						controllers.Tools.dashboard
 GET 	/oocsimote						controllers.Tools.mote
