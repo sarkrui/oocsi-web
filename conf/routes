@@ -10,14 +10,18 @@ GET 	/network.json					controllers.Application.netJson
 GET 	/network						controllers.Application.network
 
 # Tools
-GET 	/test							controllers.Tools.test
+GET 	/tools							controllers.Tools.index
 GET 	/dashboard						controllers.Tools.dashboard
 GET 	/oocsimote						controllers.Tools.mote
 GET 	/oocsimote/share				controllers.Tools.moteShare
 GET 	/iotsim							controllers.Tools.iotsim
 GET 	/animoocsi						controllers.Tools.animate
-
 POST 	/generateMoteCode				controllers.Codegen.generateOOCSIMoteCode
+
+# Test
+GET 	/test/jotted					controllers.Tools.testJotted
+GET 	/test/raw						controllers.Tools.testRaw
+GET 	/test/visual					controllers.Tools.testVisual
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               	controllers.Assets.versioned(path="/public", file: Asset)

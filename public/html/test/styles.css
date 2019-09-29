@@ -1,0 +1,8 @@
+.block {
+	width: 120px;
+	display: inline-block;
+	background: lightgreen;
+	color: seagreen;
+	font-size: 1.2em;
+	font-weight: bolder;
+}

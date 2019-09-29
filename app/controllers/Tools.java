@@ -17,21 +17,23 @@ public class Tools extends Controller {
 	}
 
 	/**
+	 * action to show an overview page for all tools and testing facilities
+	 * 
+	 * @return
+	 */
+	public Result index() {
+		return ok(views.html.Tools.index.render("Tools", "", request().host(), environment.isProd()));
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * action to show a page to make your own dashboard
 	 * 
 	 * @return
 	 */
 	public Result dashboard() {
 		return ok(views.html.Tools.dashboard.render("dashboard", "", request().host(), environment.isProd()));
-	}
-
-	/**
-	 * action to show a test page for websocket experiments with OOCSI
-	 * 
-	 * @return
-	 */
-	public Result test() {
-		return ok(views.html.Tutorial.test.render("testing", "", request().host(), environment.isProd()));
 	}
 
 	/**
@@ -68,6 +70,35 @@ public class Tools extends Controller {
 	 */
 	public Result iotsim() {
 		return ok(views.html.Tools.iotsim.render("IoTsim", "", request().host(), environment.isProd()));
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * action to show a test page for websocket experiments with OOCSI
+	 * 
+	 * @return
+	 */
+	public Result testJotted() {
+		return ok(views.html.Test.testJotted.render("Testing", "", request().host(), environment.isProd()));
+	}
+
+	/**
+	 * action to show a test page for websocket experiments with OOCSI
+	 * 
+	 * @return
+	 */
+	public Result testRaw() {
+		return ok(views.html.Test.testRaw.render("Testing", "", request().host(), environment.isProd()));
+	}
+
+	/**
+	 * action to show a test page for websocket experiments with OOCSI
+	 * 
+	 * @return
+	 */
+	public Result testVisual() {
+		return ok(views.html.Test.testVisual.render("Testing", "", request().host(), environment.isProd()));
 	}
 
 }

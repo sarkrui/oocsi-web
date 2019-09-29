@@ -1,0 +1,95 @@
+@(message: String, title: String, address: String, secure: Boolean)
+
+@main("OOCSI development and testing") {
+<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/jotted.min.css")"/>
+<script src="@routes.Assets.versioned("js/jotted.min.js")" type="text/javascript"></script>
+
+@elements.navigation("tools")
+
+<div class="container">
+
+	<div class="row">
+		<div class="col s12">
+			<p>
+				Test OOCSI for Web code on this server directly with a client.
+			</p>
+		</div>
+
+		<div class="col s12 m5 card">
+			<h6>Subscribe and receive data</h6>
+			<div class="input-field">
+				<input id="c1_channel" type="text" name="c1_channel">
+				<label for="c1_channel">Channel name</label>
+				<a id="c1_subscribe" class="btn blue">Subscribe</a>
+				<a id="c1_unsubscribe" class="btn red">Unsubscribe</a>
+				<a id="c1_clear" class="btn grey">Clear</a>
+			</div>
+			<div id="c1_results" style="padding: 1em; height: 20em; overflow: scroll;"></div>
+		</div>
+
+		<div class="col s12 m5 offset-m1 card">
+			<h6>Send data</h6>
+			<div class="input-field">
+				<input id="c2_channel" type="text" name="c2_channel">
+				<label for="c2_channel">Channel name</label>
+				<textarea id="c2_data" class="materialize-textarea" style="height: 20em; font-family: monospace;">{"number": 123, "text": "content", "boolean": true}</textarea>
+				<a id="c2_send" class="btn blue">Send</a>
+			</div>
+		</div>
+
+		<div class="col s12">
+			<small>Note that you cannot receive (left) on the channel that you send stuff out (right). To do that you need a second client. Open a second a tab with this <a href="@routes.Tools.testVisual()" target="_blank">link</a> and you are good to go.</small>
+		</div>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+	
+	// setup
+	// --------------------------------------------------------------------
+	// connect to OOCSI server running on IP
+	@if(secure) {
+		OOCSI.connect("wss://" + window.location.host + "/ws");
+	} else{
+		OOCSI.connect("ws://" + window.location.host + "/ws");
+	}
+
+
+	$('#c1_subscribe').click(function(e) {
+		let channelName = $('#c1_channel').val();
+		OOCSI.subscribe(channelName, function(e) {
+			$('#c1_results').append('<p>' + JSON.stringify(e.data) + '</p>');
+		});
+
+		e.preventDefault();
+		return false;
+	});
+
+	$('#c1_unsubscribe').click(function(e) {
+		let channelName = $('#c1_channel').val();
+		OOCSI.unsubscribe(channelName);
+
+		e.preventDefault();
+		return false;
+	});
+
+	$('#c1_clear').click(function(e) {
+		$('#c1_results *').remove();
+
+		e.preventDefault();
+		return false;
+	});
+	
+	$('#c2_send').click(function(e) {
+		let channelName = $('#c2_channel').val();
+		let data = $('#c2_data').val();
+		OOCSI.send(channelName, JSON.parse(data));
+
+		e.preventDefault();
+		return false;
+	});
+</script>
+
+
+}
