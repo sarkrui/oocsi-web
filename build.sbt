@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   javaWs
 )
 
-lazy val root = (project in file(".")).enablePlugins(PlayJava)
+lazy val root = (project in file(".")).enablePlugins(PlayJava, LauncherJarPlugin)
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
