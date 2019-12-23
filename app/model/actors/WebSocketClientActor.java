@@ -44,11 +44,11 @@ public class WebSocketClientActor extends AbstractActor {
 				if (server.addClient(client)) {
 					Logger.info("WS client " + client.getName() + " connected");
 					// status(200, );
-					out.tell("{'message' : \"welcome " + client.getName() + "\"}", self());
+					out.tell("{\"message\" : \"welcome " + client.getName() + "\"}", self());
 				} else {
 					Logger.info("WS client " + client.getName() + " rejected as existing");
 					// status(401, );
-					out.tell("{'message' : \"ERROR: client " + client.getName() + " exists already\"}", self());
+					out.tell("{\"message\" : \"ERROR: client " + client.getName() + " exists already\"}", self());
 
 					// kill self
 					kill();
