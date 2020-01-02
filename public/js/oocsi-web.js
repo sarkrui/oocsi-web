@@ -6,7 +6,7 @@ var OOCSI = (function() {
 	var responders = {};
 	var calls = {};
 	var websocket;
-	var connected = false;
+	// var connected = false;
 	var logger = internalLog;
 	var error = internalError;
 
@@ -28,21 +28,18 @@ var OOCSI = (function() {
 	}
 
 	function onOpen(evt) {
-		if(websocket.readyState == WebSocket.OPEN) {
+		if(websocket.readyState === WebSocket.OPEN) {
 			submit(username);
-			connected = true;
 		}	 
 		logger("CONNECTED");
 	}
 
 	function onClose(evt) {
 		logger("DISCONNECTED");
-		connected = false;
 	}
 
 	function onMessage(evt) {
-		websocket.send(".");
-		if(evt.data != 'ping') {
+		if(evt.data !== 'ping') {
 			try {
 				var e = JSON.parse(evt.data);
 				if(e.data.hasOwnProperty('_MESSAGE_ID') && calls.hasOwnProperty(e.data['_MESSAGE_ID'])) {
@@ -63,6 +60,8 @@ var OOCSI = (function() {
 				logger('ERROR: parse exception for event data ' + evt.data);
 			}
 			logger('RESPONSE: ' + evt.data);
+		} else if(evt.data.length > 0) {
+			websocket.send(".");
 		}
 	}
 
@@ -72,7 +71,7 @@ var OOCSI = (function() {
 	}
 
 	function waitForSocket(fn) {
-		if(!websocket || websocket.readyState == WebSocket.CONNECTING) {
+		if(!websocket || websocket.readyState === WebSocket.CONNECTING) {
 			setTimeout(function() { waitForSocket(fn) }, 200);
 		} else {
 			fn();
@@ -97,12 +96,16 @@ var OOCSI = (function() {
 		// do nothing by default
 	}
 
+	function internalConnected() {
+		return websocket.readyState === WebSocket.OPEN;
+	}
+
 	function internalSend(client, data) {
-		connected && submit('sendjson ' + client + ' '+ JSON.stringify(data));
+		internalConnected() && submit('sendjson ' + client + ' '+ JSON.stringify(data));
 	} 
 
 	function internalCall(call, data, timeout, fn) {
-		if(connected) {
+		if(internalConnected()) {
 			var uuid = guid();
 			calls[uuid] = {expiration: (+new Date) + timeout, fn: fn};
 			data['_MESSAGE_ID'] = uuid;
@@ -112,7 +115,7 @@ var OOCSI = (function() {
 	} 
 
 	function internalRegister(call, fn) {
-		if(connected) {
+		if(internalConnected()) {
 			responders[call] = {fn: fn};
 			internalSubscribe(call, function(e) {
 				var response = {'_MESSAGE_ID': e.data['_MESSAGE_ID']};
@@ -123,14 +126,14 @@ var OOCSI = (function() {
 	}
 
 	function internalSubscribe(channel, fn) {
-		if(connected) {
+		if(internalConnected()) {
 			submit('subscribe ' + channel);
 			handlers[channel] = fn;
 		} 
 	} 
 
 	function internalUnsubscribe(channel) {
-		if(connected) {
+		if(internalConnected()) {
 			submit('unsubscribe ' + channel);
 			handlers[channel] = function() {};
 		}
@@ -202,7 +205,7 @@ var OOCSI = (function() {
 			return accessor;
 		},
 		isConnected: function() {
-			return connected;
+			return internalConnected();
 		},
 		close: function() {
 			waitForSocket(function() {
