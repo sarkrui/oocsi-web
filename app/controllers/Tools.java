@@ -68,8 +68,13 @@ public class Tools extends Controller {
 	 * 
 	 * @return
 	 */
-	public Result datacanvas() {
-		return ok(views.html.Tools.datacanvas.render("Data Canvas", "", request().host(), environment.isProd()));
+	public Result datacanvas(String token) {
+		if (token == null || token.isEmpty() || !token.matches("^[A-Za-z0-9-_]+$")) {
+			return ok(views.html.Tools.token.render("Please enter the channel token:", "Data Canvas",
+					controllers.routes.Tools.datacanvas(token).relativeTo("/"), environment.isProd()));
+		} else {
+			return ok(views.html.Tools.datacanvas.render("Data Canvas", token, request().host(), environment.isProd()));
+		}
 	}
 
 	/**

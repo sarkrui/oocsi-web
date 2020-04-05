@@ -1,0 +1,46 @@
+@(message: String, title: String, address: String, secure: Boolean) 
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Data Canvas</title>
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/materialize.min.css")">
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/main.css")">
+		<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+		<script src="@routes.Assets.versioned("js/jquery.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/materialize.min.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <div class="container" class="grey">
+        	<div class="row grey lighten-5" style="text-align: right">
+ 				<h4>
+					<a class="modal-trigger" style="color: black;float: left">
+						@title
+					</a>
+ 	 			</h4>
+			</div>
+
+			<div class="row">
+        		<div class="col s12">
+        			@message
+		        	<br>
+		        	<br>
+		        </div>
+		        <div class="col s12">
+		        	<form action="@address" method="GET">
+						<div class="row">
+							<div class="input-field col s8">
+								<i class="material-icons prefix">cake</i>
+								<input id="token" name="token" type="text" pattern="[A-Za-z0-9-_]+" class="validate">
+								<label for="token">Token</label>
+								<span class="helper-text" data-error="cannot contain spaces or special characters" data-success="good to go!"></span>
+							</div>
+							<div class="input-field col s4">
+								<button type="submit" class="btn blue"><i class="material-icons">play_arrow</i> Proceed</button>
+							</div>
+ 						</div>
+					</form>		        	
+		        </div>
+	        	<br>
+		    </div>

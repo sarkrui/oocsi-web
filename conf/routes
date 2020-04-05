@@ -15,7 +15,8 @@ GET 	/dashboard						controllers.Tools.dashboard
 GET 	/oocsimote						controllers.Tools.mote
 GET 	/oocsimote/share				controllers.Tools.moteShare
 GET 	/iotsim							controllers.Tools.iotsim
-GET 	/datacanvas						controllers.Tools.datacanvas
+GET 	/datacanvas						controllers.Tools.datacanvas(token : String ?= "")
+GET 	/datacanvas/:token				controllers.Tools.datacanvas(token : String)
 GET 	/animoocsi						controllers.Tools.animate
 POST 	/generateMoteCode				controllers.Codegen.generateOOCSIMoteCode
 
