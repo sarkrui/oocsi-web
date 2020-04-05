@@ -1,0 +1,320 @@
+@(message: String, title: String, address: String, secure: Boolean) 
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Data Canvas</title>
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/materialize.min.css")">
+		<link rel="stylesheet" media="screen,projection" type="text/css" href="@routes.Assets.versioned("css/main.css")">
+		<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+		<script src="@routes.Assets.versioned("js/jquery.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/materialize.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/p5.min.js")" type="text/javascript"></script>
+		<script src="@routes.Assets.versioned("js/oocsi-web.min.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <div class="container" class="grey">
+        	<div class="row grey lighten-5" style="text-align: right">
+ 				<h4>
+					<a class="modal-trigger" style="color: black;float: left">
+						Data Canvas
+					</a>
+					<a href="#modalConfiguration" id="connectionBtn" class="btn-flat green modal-trigger" style="margin-left: 0.5em;">
+						<i class="material-icons">wifi</i> configure
+					</a>
+ 	 			</h4>
+			</div>
+
+			<div class="row">
+        		<div class="col s12">
+		        	<div class="progress">
+						<div class="indeterminate"></div>
+					</div>
+		        </div>
+		        <div class="col s12">
+		        	<br>
+		        	<br>
+
+		        	<form>
+						<div class="row">
+							<div class="col s6 m4">
+								<a id="playBtn" class="btn"><i class="material-icons">play_arrow</i></a>
+								<a id="pauseBtn" class="btn"><i class="material-icons">pause</i></a>
+							</div>
+ 						</div>
+					</form>		        	
+		        </div>
+	        	<br>
+		    </div>
+
+        	<div class="row" style="user-select: none">
+	        	<div class="col s12 center-align">
+		        	<div id="canvas" class="">
+		        	</div>
+				</div>
+        	</div>
+
+			<!-- configuration -->
+			<div id="modalConfiguration" class="modal bottom-sheet">
+				<div class="modal-content">
+					<h4>Connect</h4>
+					<form>
+						<div class="row">
+							<div class="input-field col s6">
+								<input id="oocsi_client" type="text" class="validate">
+								<label for="oocsi_client">OOCSI id</label>
+							</div>
+							<div class="input-field col s3">
+								<input id="xpos" type="number" class="validate">
+								<label for="xpos">x position</label>
+							</div>
+							<div class="input-field col s3">
+								<input id="ypos" type="number" class="validate">
+								<label for="ypos">Y position</label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+					<a href="#!" id="connectBtn" class="modal-close waves-effect waves-green btn">Connect</a>
+				</div>
+			</div>
+
+		  	<script type="text/javascript">
+			
+				$(document).ready(function() {
+
+					var EXTRUSION = 1;
+
+					const s = p => {
+					  let myself = {
+						text: 'click "configure" above',
+						x: 0,
+						y: 0
+					  };
+					  let clients = [myself];
+					  let labels = [];
+					  var events = [];
+					  let BASEPLATE_WIDTH = 600 * 1.333;
+					  let BASEPLATE_HEIGHT = 428 * 1.333;
+					  let svg;
+					  let font;
+
+					  p.preload = function() {
+						svg = p.loadImage("/assets/images/sandbox_gs_f.svg");
+						font = p.loadFont('assets/font/sourcesans/SourceSansPro-Regular.otf');
+					  };
+
+					  p.setup = function() {
+					    p.createCanvas(1200, 700, p.WEBGL);
+					    p.textFont(font);
+					    p.rectMode(p.CENTER);
+					    p.ellipseMode(p.CENTER);
+						p.imageMode(p.CENTER);
+					  };
+
+					  p.draw = function() {
+					    p.background(255);
+
+					    // global rotation
+					    if(configuration.play) {
+							p.rotateX(p.radians(p.map(p.mouseY, 0, p.height, 40, 60)));
+						    p.rotateZ(p.radians(p.frameCount/100.));
+						} else {
+							p.rotateX(p.radians(p.map(p.mouseY, 0, p.height, -5, 5)));
+						}
+
+						// base plate
+						p.push();
+						p.fill(245);
+						p.rect(0, 0, BASEPLATE_WIDTH, BASEPLATE_HEIGHT);
+						p.translate(0, 0, 1);
+						p.fill(180);
+						p.text(Math.round(p.mouseX) + "x" + Math.round(p.mouseY), -BASEPLATE_WIDTH/2 + 10, -p.height/2 + BASEPLATE_HEIGHT + 50);
+						p.pop();
+
+
+						// mural
+						p.translate(0, 0, 1);
+						for(var i = 0; i < EXTRUSION; i++) {
+							p.image(svg, 0, 0, BASEPLATE_WIDTH, BASEPLATE_HEIGHT);
+							p.translate(0, 0, 10);
+						}
+
+						// show cursor
+						p.push();
+						p.translate(-p.width/2 + p.map(p.mouseX, 0, p.width, 0, BASEPLATE_WIDTH), -p.height/2 + p.map(p.mouseY, 0, p.height, 0, BASEPLATE_HEIGHT), 1);
+						p.fill(120); 
+						p.noStroke();
+						p.ellipse(0, 0, 10, 10);
+						p.pop();
+
+						labels.forEach(function(d, i) {
+							p.push();
+							p.translate(d.x, d.y, 1);
+							p.fill(110);
+							p.stroke(110);
+							p.ellipse(0, 0, 5, 5);
+							p.line(0, 0, 0, 0, 0, 100);
+							p.translate(0, 0, 110);
+							p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, -5, 20)));
+							p.text(d.text, 0, 0);
+							p.pop();
+						});
+						clients.forEach(function(d, i) {
+							p.push();
+							p.translate(d.x, d.y, 1);
+							p.fill(200, 0, 0);
+							p.stroke(200, 0, 0);
+							p.ellipse(0, 0, 5, 5);
+							p.line(0, 0, 0, 0, 0, 100);
+							p.translate(0, 0, 110);
+							p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, -5, 20)));
+							p.text(d.text, 0, 0);
+							p.pop();
+						});
+						let respawnedEvents = [];
+						events.forEach(function(d, i) {
+							d.ttl -= 1;
+							if(d.ttl > 0) {
+								d.x += (d.dx - d.sx)/100;
+								d.y += (d.dy - d.sy)/100;
+								p.noStroke();
+								p.fill(135, 40, 135);
+								p.push();
+								let ele = p.map(p.sin(p.map(d.ttl, 0, 100, 0, p.PI)), 0, 1, 10, 120);
+								p.translate(d.x, d.y, ele);
+								p.sphere(4);
+								p.pop();
+								p.stroke(200, 20);
+								p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
+
+								respawnedEvents.push(d);
+							}
+						});
+						events = respawnedEvents;
+					  };
+
+					  p.mousePressed = function() {
+
+					  	if(p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) {
+					  		return true;
+					  	}
+
+					  	var label = window.prompt("Provide a new label: ");
+					  	if(label) {
+						  	labels.push({
+						  		text: label,
+						  		x: -p.width/2 + p.map(p.mouseX, 0, p.width, 0, BASEPLATE_WIDTH),
+						  		y: -p.height/2 + p.map(p.mouseY, 0, p.height, 0, BASEPLATE_HEIGHT)
+						  	});
+					  	}
+					  };
+
+					  p.setClient = function(text, x, y) {
+						myself.text = text;
+						myself.x = -p.width/2 + p.map(x, 0, p.width, 0, BASEPLATE_WIDTH);
+						myself.y = -p.height/2 + p.map(y, 0, p.height, 0, BASEPLATE_HEIGHT);
+					  };
+
+					  p.updateClient = function(text, x, y) {
+						var client = p.findClient(text);
+						if(client) {
+							if(x > -1) {
+								client.x = -p.width/2 + p.map(x, 0, p.width, 0, BASEPLATE_WIDTH);
+								client.y = -p.height/2 + p.map(y, 0, p.height, 0, BASEPLATE_HEIGHT);
+							}
+							return;
+						}
+
+					  	// if no client found, add new
+					  	clients.push({
+					  		text: text,
+					  		x: -p.width/2 + p.random(330, BASEPLATE_WIDTH),
+							y: -p.height/2 + 100
+					  	});
+					  };
+
+					  p.findClient = function(text) {
+					  	for(clntIdx in clients) {
+					  		let client = clients[clntIdx];
+					  		if(client.text == text) {
+					  			return client;
+							}
+						}
+						return undefined;
+					  };
+
+					  p.addEvent = function(src, dst) {
+					  	if(events.length < 30) {
+						  let source = p.findClient(src);
+						  let destination = p.findClient(dst);
+						  if(source && destination) {
+						  	events.push({
+						  		x: source.x,
+						  		y: source.y,
+						  		sx: source.x,
+						  		sy: source.y,
+						  		dx: destination.x,
+						  		dy: destination.y,
+						  		ttl: 100
+						  	});
+						  }
+					  	}
+					  };
+
+					};
+
+					let visualisation = new p5(s, 'canvas');
+
+					///////////////////////////////////////////////////////////////////
+
+					var configuration = {
+						client: "",
+						play: false,
+						speed: 3600
+					};
+
+					$('#oocsi_client,#xpos,#ypos').change(function() {
+						visualisation.setClient($('#oocsi_client').val(), $('#xpos').val(), $('#ypos').val());
+						configuration.client = $('#oocsi_client').val();
+					});
+
+					$('.modal').modal();
+					$('.progress').hide();
+
+					// connect to OOCSI server
+					@if(secure) {
+						OOCSI.connect("wss://" + window.location.host + "/ws");	
+					} else {
+						OOCSI.connect("ws://" + window.location.host + "/ws");
+					}
+
+					OOCSI.subscribe("OOCSI_events", function(msg) {
+						// first discovery
+						if(visualisation.findClient(msg.data.SUB)) {
+							visualisation.updateClient(msg.data.PUB, -1, -1);
+						}
+						if(visualisation.findClient(msg.data.PUB)) {
+							visualisation.updateClient(msg.data.SUB, -1, -1);
+						}
+
+						visualisation.addEvent(msg.data.PUB, msg.data.SUB);
+					});
+
+
+					$('#playBtn').click(function() {
+						configuration.play = true;
+					});
+					$('#pauseBtn').click(function() {
+						configuration.play = false;
+					});
+
+				});
+
+			</script>
+        </div>
+    </body>
+</html>

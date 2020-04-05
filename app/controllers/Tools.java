@@ -64,6 +64,15 @@ public class Tools extends Controller {
 	}
 
 	/**
+	 * action to show the data canvas page
+	 * 
+	 * @return
+	 */
+	public Result datacanvas() {
+		return ok(views.html.Tools.datacanvas.render("Data Canvas", "", request().host(), environment.isProd()));
+	}
+
+	/**
 	 * action to show the IoTsim page
 	 * 
 	 * @return
