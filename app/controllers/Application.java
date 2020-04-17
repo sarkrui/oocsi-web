@@ -57,7 +57,7 @@ public class Application extends Controller {
 		if (configuration.hasPath("oocsi.clients")) {
 			try {
 				int clients = configuration.getInt("oocsi.clients");
-				OOCSIServer.setMaxClients(clients);
+				OOCSIServer.getInstance().setMaxClients(clients);
 			} catch (Exception e) {
 				Logger.warn("Property 'oocsi.clients' not readable or parseable in configuration");
 			}
