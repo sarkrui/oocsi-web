@@ -199,6 +199,24 @@
 							p.pop();
 						});
 						channels.forEach(function(d, i) {
+
+							// some physics
+							channels.forEach(function(e,o) {
+								if(d != e) {
+									if(p.dist(d.x, d.y, e.x, e.y) < 60) {
+										while(p.dist(d.vx, d.vy, e.vx, e.vy) < 0.5) {
+											d.vx = p.random(-2, 2);
+											d.vy = p.random(-2, 2);
+										}
+
+										d.x += d.vx;
+										d.y += d.vy;
+										e.x += e.vx;
+										e.y += e.vy;
+									}
+								}
+							});
+
 							p.push();
 							p.translate(d.x, d.y, 1);
 							p.fill(0, 0, 200, 200);
@@ -227,7 +245,7 @@
 									p.pop();
 									p.stroke(200, 20);
 									p.line(d.sx, d.sy, 120, d.dx, d.dy, 100);
-								} else if(d.cx > -1) {
+								} else if(d.cx != -1) {
 									d.x += (d.dx - d.cx)/100;
 									d.y += (d.dy - d.cy)/100;
 									p.noStroke();
@@ -314,7 +332,9 @@
 						  	channel = {
 						  		text: text,
 						  		x: 0,
-								y: 0
+								y: 0,
+								vx: p.random(-2, 2),
+								vy: p.random(-2, 2)
 						  	};
 						  	channels.push(channel);
 						}
@@ -463,8 +483,10 @@
 
 						setInterval(function() {
 							let labels = visualisation.getLabels();
-							let index = visualisation.round(visualisation.random(0, labels.length - 1));
-							OOCSI.send("@token", {label: labels[index].text, x: labels[index].x, y: labels[index].y});
+							if(labels.length > 0) {
+								let index = visualisation.round(visualisation.random(0, labels.length - 1));
+								OOCSI.send("@token", {label: labels[index].text, x: labels[index].x, y: labels[index].y});
+							}
 						}, 2300);
 
 						$('#connectionBtn').click();
