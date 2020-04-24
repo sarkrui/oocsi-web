@@ -46,455 +46,458 @@
 
     	<div class="" style="width: 100%; height: 80vh; user-select: none">
         	<div class="" style="overflow: hidden">
-		        	<div id="canvas" class="">
-		        	</div>
-				</div>
-        	</div>
-
-			<!-- configuration -->
-			<div id="modalConfiguration" class="modal bottom-sheet">
-				<div class="modal-content">
-				<h4>Connect to the data canvas as ... </h4>
-					<form>
-						<div class="row">
-							<div class="input-field col s6">
-								<input id="oocsi_client" type="text" pattern="[A-Za-z0-9-_]+" class="validate">
-								<label for="oocsi_client">OOCSI client ID</label>
-								<span class="helper-text" data-error="cannot contain spaces and special characters" data-success="good to go!"></span>
-							</div>
-							<div class="input-field col s3">
-								<input id="xpos" type="number" class="validate">
-								<label for="xpos">x position on canvas</label>
-							</div>
-							<div class="input-field col s3">
-								<input id="ypos" type="number" class="validate">
-								<label for="ypos">Y position on canvas</label>
-							</div>
-						</div>
-					</form>
-				</div>
-				<div class="modal-footer">
-					<a href="#!" class="modal-close waves-effect waves-green btn">Close</a>
-				</div>
+	        	<div id="canvas" class="">
+	        	</div>
 			</div>
+    	</div>
 
-		  	<script type="text/javascript">
-			
-				$(document).ready(function() {
+		<!-- configuration -->
+		<div id="modalConfiguration" class="modal bottom-sheet">
+			<div class="modal-content">
+				<h4>Connect to the data canvas as ... </h4>
+				<form>
+					<div class="row">
+						<div class="input-field col s6">
+							<input id="oocsi_client" type="text" pattern="[A-Za-z0-9-_]+" class="validate">
+							<label for="oocsi_client">OOCSI client ID</label>
+							<span class="helper-text" data-error="cannot contain spaces and special characters" data-success="good to go!"></span>
+						</div>
+						<div class="input-field col s3">
+							<input id="xpos" type="number" class="validate">
+							<label for="xpos">x position on canvas</label>
+						</div>
+						<div class="input-field col s3">
+							<input id="ypos" type="number" class="validate">
+							<label for="ypos">Y position on canvas</label>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<a href="#!" class="modal-close waves-effect waves-green btn">Close</a>
+			</div>
+		</div>
 
-					var EXTRUSION = 1;
+	  	<script type="text/javascript">
+		
+			$(document).ready(function() {
 
-					const s = p => {
-					  let myself = {
-						text: 'click "configure" above',
-						x: 0,
-						y: 0
-					  };
-					  let clients = [myself];
-					  let channels = [];
-					  let labels = [];
-					  let externalLabels = [];
-					  var events = [];
-					  let BASEPLATE_WIDTH = 600 * 1.333;
-					  let BASEPLATE_HEIGHT = 428 * 1.333;
-					  let svg;
-					  let font;
-					  var mx;
-					  var my;
-					  var rotX = 0;
-					  var rotZ = 0;
+				var EXTRUSION = 1;
 
-					  p.preload = function() {
-						svg = p.loadImage("/assets/images/sandbox_gs_f.svg");
-						font = p.loadFont('assets/font/sourcesans/SourceSansPro-Regular.otf');
-					  };
+				const s = p => {
+				  let myself = {
+					text: 'click "configure" above',
+					x: 0,
+					y: 0
+				  };
+				  let clients = [myself];
+				  let channels = [];
+				  let labels = [];
+				  let externalLabels = [];
+				  var events = [];
+				  let BASEPLATE_WIDTH = 600 * 1.333;
+				  let BASEPLATE_HEIGHT = 428 * 1.333;
+				  let svg;
+				  let font;
+				  var mx;
+				  var my;
+				  var rotX = 0;
+				  var rotZ = 0;
 
-					  p.setup = function() {
-					    p.createCanvas(1200, 700, p.WEBGL);
-					    p.textFont(font);
-					    p.rectMode(p.CENTER);
-					    p.ellipseMode(p.CENTER);
-						p.imageMode(p.CENTER);
-					  };
+				  p.preload = function() {
+					svg = p.loadImage("/assets/images/sandbox_gs_f.svg");
+					font = p.loadFont('assets/font/sourcesans/SourceSansPro-Regular.otf');
+				  };
 
-					  p.draw = function() {
-					    p.background(255);
+				  p.setup = function() {
+				    p.createCanvas(1200, 700, p.WEBGL);
+				    p.textFont(font);
+				    p.rectMode(p.CENTER);
+				    p.ellipseMode(p.CENTER);
+					p.imageMode(p.CENTER);
+				  };
 
-					    // global rotation
-					    if(configuration.play) {
-							rotX += (p.radians(p.map(p.mouseY, 0, p.height, 40, 60)) - rotX)/20;
-						    rotZ += (p.radians((p.frameCount/80.) % 360) - rotZ)/20;
-						} else {
-							rotX += (p.radians(p.map(p.mouseY, 0, p.height, -5, 5)) - rotX)/20;
-							rotZ += (-rotZ)/20;
-						}
+				  p.draw = function() {
+				    p.background(255);
 
-						p.rotateX(rotX);
-						p.rotateZ(rotZ);
+				    // global rotation
+				    if(configuration.play) {
+						rotX += (p.radians(p.map(p.mouseY, 0, p.height, 40, 60)) - rotX)/20;
+					    rotZ += (p.radians((p.frameCount/80.) % 360) - rotZ)/20;
+					} else {
+						rotX += (p.radians(p.map(p.mouseY, 0, p.height, -5, 5)) - rotX)/20;
+						rotZ += (-rotZ)/20;
+					}
 
-						// base plate
+					p.rotateX(rotX);
+					p.rotateZ(rotZ);
+
+					// base plate
+					p.push();
+					p.fill(245);
+					p.rect(0, 0, BASEPLATE_WIDTH, BASEPLATE_HEIGHT);
+					p.translate(0, 0, 1);
+					p.fill(180);
+					p.text(Math.round(p.mouseX) + "x" + Math.round(p.mouseY), -BASEPLATE_WIDTH/2 + 10, -p.height/2 + BASEPLATE_HEIGHT + 50);
+					p.pop();
+
+					// mural
+					p.translate(0, 0, 1);
+					p.push();
+					p.rotate(p.radians(90));
+					for(var i = 0; i < EXTRUSION; i++) {
+						p.image(svg, 0, 0, BASEPLATE_HEIGHT, BASEPLATE_WIDTH);
+						p.translate(0, 0, 10);
+					}
+					p.pop();
+
+					// compute cursoe
+					mx = p.map(p.mouseX, 0, p.width, -BASEPLATE_WIDTH/2, BASEPLATE_WIDTH/2);
+					my = p.map(p.mouseY, 0, p.height, -BASEPLATE_HEIGHT/2, BASEPLATE_HEIGHT/2);
+
+					// show cursor
+					p.push();
+					p.translate(mx, my, 1);
+					p.fill(120); 
+					p.noStroke();
+					p.ellipse(0, 0, 10, 10);
+					p.pop();
+
+					labels.forEach(function(d, i) {
 						p.push();
-						p.fill(245);
-						p.rect(0, 0, BASEPLATE_WIDTH, BASEPLATE_HEIGHT);
-						p.translate(0, 0, 1);
-						p.fill(180);
-						p.text(Math.round(p.mouseX) + "x" + Math.round(p.mouseY), -BASEPLATE_WIDTH/2 + 10, -p.height/2 + BASEPLATE_HEIGHT + 50);
+						p.translate(d.x, d.y, 1);
+						p.fill(110);
+						p.stroke(110);
+						p.ellipse(0, 0, 5, 5);
+						p.line(0, 0, 0, 0, 0, 20);
+						p.translate(0, 0, 30);
+						p.rotateText();
+						p.text(d.text, 0, 0);
 						p.pop();
-
-						// mural
-						p.translate(0, 0, 1);
-						for(var i = 0; i < EXTRUSION; i++) {
-							p.image(svg, 0, 0, BASEPLATE_WIDTH, BASEPLATE_HEIGHT);
-							p.translate(0, 0, 10);
-						}
-
-						// compute cursoe
-						mx = p.map(p.mouseX, 0, p.width, -BASEPLATE_WIDTH/2, BASEPLATE_WIDTH/2);
-						my = p.map(p.mouseY, 0, p.height, -BASEPLATE_HEIGHT/2, BASEPLATE_HEIGHT/2);
-
-						// show cursor
-						p.push();
-						p.translate(mx, my, 1);
-						p.fill(120); 
-						p.noStroke();
-						p.ellipse(0, 0, 10, 10);
-						p.pop();
-
-						labels.forEach(function(d, i) {
+					});
+					externalLabels.forEach(function(d, i) {
+						d.ttl--;
+						if(d.ttl > 0) {
 							p.push();
 							p.translate(d.x, d.y, 1);
-							p.fill(110);
-							p.stroke(110);
+							p.fill(150, 150, 80);
+							p.stroke(150, 150, 80);
 							p.ellipse(0, 0, 5, 5);
 							p.line(0, 0, 0, 0, 0, 20);
 							p.translate(0, 0, 30);
 							p.rotateText();
 							p.text(d.text, 0, 0);
 							p.pop();
-						});
-						externalLabels.forEach(function(d, i) {
-							d.ttl--;
-							if(d.ttl > 0) {
-								p.push();
-								p.translate(d.x, d.y, 1);
-								p.fill(150, 150, 80);
-								p.stroke(150, 150, 80);
-								p.ellipse(0, 0, 5, 5);
-								p.line(0, 0, 0, 0, 0, 20);
-								p.translate(0, 0, 30);
-								p.rotateText();
-								p.text(d.text, 0, 0);
-								p.pop();
-							}
-						});
-						clients.forEach(function(d, i) {
-							p.push();
-							p.translate(d.x, d.y, 1);
-							p.fill(200, 0, 0);
-							p.stroke(200, 0, 0);
-							p.ellipse(0, 0, 5, 5);
-							p.line(0, 0, 0, 0, 0, 50);
-							p.translate(0, 0, 60);
-							p.rotateText();
-							p.text(d.text, 0, 0);
-							p.pop();
-						});
-						channels.forEach(function(d, i) {
+						}
+					});
+					clients.forEach(function(d, i) {
+						p.push();
+						p.translate(d.x, d.y, 1);
+						p.fill(200, 0, 0);
+						p.stroke(200, 0, 0);
+						p.ellipse(0, 0, 5, 5);
+						p.line(0, 0, 0, 0, 0, 50);
+						p.translate(0, 0, 60);
+						p.rotateText();
+						p.text(d.text, 0, 0);
+						p.pop();
+					});
+					channels.forEach(function(d, i) {
 
-							// some physics
-							channels.forEach(function(e,o) {
-								if(d != e) {
-									if(p.dist(d.x, d.y, e.x, e.y) < 60) {
-										while(p.dist(d.vx, d.vy, e.vx, e.vy) < 0.5) {
-											d.vx = p.random(-2, 2);
-											d.vy = p.random(-2, 2);
-										}
-
-										d.x += d.vx;
-										d.y += d.vy;
-										e.x += e.vx;
-										e.y += e.vy;
+						// some physics
+						channels.forEach(function(e,o) {
+							if(d != e) {
+								if(p.dist(d.x, d.y, e.x, e.y) < 60) {
+									while(p.dist(d.vx, d.vy, e.vx, e.vy) < 0.5) {
+										d.vx = p.random(-2, 2);
+										d.vy = p.random(-2, 2);
 									}
+
+									d.x += d.vx;
+									d.y += d.vy;
+									e.x += e.vx;
+									e.y += e.vy;
 								}
-							});
-
-							p.push();
-							p.translate(d.x, d.y, 1);
-							p.fill(0, 0, 200, 200);
-							p.stroke(0, 0, 200);
-							p.line(0, 0, 0, 0, 0, 100);
-							p.translate(0, 0, 100);
-							p.ellipse(0, 0, 10, 10);
-							p.translate(0, 0, 10);
-							p.rotateText();
-							p.text(d.text, 0, 0);
-							p.pop();
-						});
-						let respawnedEvents = [];
-						events.forEach(function(d, i) {
-							d.ttl -= 1;
-							if(d.ttl > 0) {
-								if(d.ttl > 100) {
-									d.x += (d.cx - d.sx)/100;
-									d.y += (d.cy - d.sy)/100;
-									p.noStroke();
-									p.fill(75, 40, 235);
-									p.push();
-									let ele = p.map(d.ttl, 200, 100, 0, 100);
-									p.translate(d.x, d.y, ele);
-									p.sphere(6);
-									p.pop();
-									p.stroke(200, 20);
-									p.line(d.sx, d.sy, 120, d.dx, d.dy, 100);
-								} else if(d.cx != -1) {
-									d.x += (d.dx - d.cx)/100;
-									d.y += (d.dy - d.cy)/100;
-									p.noStroke();
-									p.fill(135, 40, 135);
-									p.push();
-									let ele = p.map(d.ttl, 100, 0, 100, 0);
-									p.translate(d.x, d.y, ele);
-									p.sphere(4);
-									p.pop();
-									p.stroke(200, 20);
-									p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
-								} else {								
-									d.x += (d.dx - d.sx)/100;
-									d.y += (d.dy - d.sy)/100;
-									p.noStroke();
-									p.fill(135, 40, 135);
-									p.push();
-									let ele = p.map(p.sin(p.map(d.ttl, 0, 100, 0, p.PI)), 0, 1, 0, 60);
-									p.translate(d.x, d.y, ele);
-									p.sphere(4);
-									p.pop();
-									p.stroke(200, 20);
-									p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
-								}
-
-								respawnedEvents.push(d);
 							}
 						});
-						events = respawnedEvents;
-					  };
 
-					  p.rotateText = function() {
-						if(configuration.play) {
-							p.rotateZ(-p.radians(p.frameCount/80.));
-							p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, 40, 60)));
-						} else {
-							p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, -5, 5)));
-						}
-					  }
-
-					  p.mousePressed = function() {
-
-					  	if(mx < -BASEPLATE_WIDTH/2 || mx > BASEPLATE_WIDTH/2 || my < -BASEPLATE_HEIGHT/2 || my > BASEPLATE_HEIGHT/2) {
-					  		return true;
-					  	}
-
-					  	var label = window.prompt("Provide a new label: ");
-					  	if(label) {
-						  	labels.push({
-						  		text: label,
-						  		x: mx,
-						  		y: my
-						  	});
-					  	}
-					  };
-
-					  p.setClient = function(text, x, y) {
-						myself.text = text;
-						myself.x = -p.width/2 + p.map(x, 0, p.width, 0, BASEPLATE_WIDTH);
-						myself.y = -p.height/2 + p.map(y, 0, p.height, 0, BASEPLATE_HEIGHT);
-					  };
-
-					  p.updateClient = function(text, x, y) {
-						var client = p.findClient(text);
-						if(client) {
-							if(x > -1) {
-								client.x = -p.width/2 + p.map(x, 0, p.width, 0, BASEPLATE_WIDTH);
-								client.y = -p.height/2 + p.map(y, 0, p.height, 0, BASEPLATE_HEIGHT);
-							}
-							return;
-						}
-
-					  	// if no client found, add new
-					  	clients.push({
-					  		text: text,
-					  		x: -p.width/2 + p.random(330, BASEPLATE_WIDTH),
-							y: -p.height/2 + 100
-					  	});
-					  };
-
-					  p.updateChannel = function(text) {
-					  	var channel = p.findClient(text, channels);
-						if(!channel) {
-						  	channel = {
-						  		text: text,
-						  		x: 0,
-								y: 0,
-								vx: p.random(-2, 2),
-								vy: p.random(-2, 2)
-						  	};
-						  	channels.push(channel);
-						}
-					  	return channel;
-					  };
-
-					  p.findClient = function(text, listIn) {
-					  	let list = listIn || clients;
-					  	for(clntIdx in list) {
-					  		let client = list[clntIdx];
-					  		if(client.text == text) {
-					  			return client;
-							}
-						}
-						return undefined;
-					  };
-
-					  p.addEvent = function(src, dst, ch) {
-					  	if(events.length < 30) {
-						  let source = p.findClient(src);
-						  let destination = p.findClient(dst);
-
-						  if(source && destination) {
-							
-							// check channel
-							var channel = undefined;
-							if(ch && ch.length > 0) {
-							channel = p.updateChannel(ch);
+						p.push();
+						p.translate(d.x, d.y, 1);
+						p.fill(0, 0, 200, 200);
+						p.stroke(0, 0, 200);
+						p.line(0, 0, 0, 0, 0, 100);
+						p.translate(0, 0, 100);
+						p.ellipse(0, 0, 10, 10);
+						p.translate(0, 0, 10);
+						p.rotateText();
+						p.text(d.text, 0, 0);
+						p.pop();
+					});
+					let respawnedEvents = [];
+					events.forEach(function(d, i) {
+						d.ttl -= 1;
+						if(d.ttl > 0) {
+							if(d.ttl > 100) {
+								d.x += (d.cx - d.sx)/100;
+								d.y += (d.cy - d.sy)/100;
+								p.noStroke();
+								p.fill(75, 40, 235);
+								p.push();
+								let ele = p.map(d.ttl, 200, 100, 0, 100);
+								p.translate(d.x, d.y, ele);
+								p.sphere(6);
+								p.pop();
+								p.stroke(200, 20);
+								p.line(d.sx, d.sy, 120, d.dx, d.dy, 100);
+							} else if(d.cx != -1) {
+								d.x += (d.dx - d.cx)/100;
+								d.y += (d.dy - d.cy)/100;
+								p.noStroke();
+								p.fill(135, 40, 135);
+								p.push();
+								let ele = p.map(d.ttl, 100, 0, 100, 0);
+								p.translate(d.x, d.y, ele);
+								p.sphere(4);
+								p.pop();
+								p.stroke(200, 20);
+								p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
+							} else {								
+								d.x += (d.dx - d.sx)/100;
+								d.y += (d.dy - d.sy)/100;
+								p.noStroke();
+								p.fill(135, 40, 135);
+								p.push();
+								let ele = p.map(p.sin(p.map(d.ttl, 0, 100, 0, p.PI)), 0, 1, 0, 60);
+								p.translate(d.x, d.y, ele);
+								p.sphere(4);
+								p.pop();
+								p.stroke(200, 20);
+								p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
 							}
 
-						  	events.push({
-						  		x: source.x,
-						  		y: source.y,
-						  		sx: source.x,
-						  		sy: source.y,
-						  		cx: channel ? channel.x : -1,
-						  		cy: channel ? channel.y : -1,
-						  		dx: destination.x,
-						  		dy: destination.y,
-						  		ttl: channel ? 200 : 100
-						  	});
-						  }
-					  	}
-					  };
-
-					  p.getLabels = function() {
-					  	return labels;
-					  };
-
-					  p.addLabel = function(text, x, y) {
-						for(clntIdx in externalLabels) {
-					  		let label = externalLabels[clntIdx];
-					  		if(label.text == text) {
-					  			label.x = x;
-					  			label.y = y;
-					  			label.ttl = 10000;
-					  			return;
-							}
+							respawnedEvents.push(d);
 						}
-
-						externalLabels.push({
-							text: text,
-							x: x,
-							y: y,
-				  			ttl: 10000
-						});
-					  };
-
-					};
-
-					let visualisation = new p5(s, 'canvas');
-
-					///////////////////////////////////////////////////////////////////
-
-					var configuration = {
-						client: "",
-						x : 0,
-						y: 0,
-						play: false,
-						speed: 3600
-					};
-
-					$('#oocsi_client,#xpos,#ypos').change(function() {
-						visualisation.setClient($('#oocsi_client').val(), $('#xpos').val(), $('#ypos').val());
-						configuration.client = $('#oocsi_client').val();
-						configuration.x = $('#xpos').val();
-						configuration.y = $('#ypos').val();						
 					});
+					events = respawnedEvents;
+				  };
 
-					$('.modal').modal();
-
-					$('#playBtn').click(function() {
-						configuration.play = true;
-					});
-					$('#pauseBtn').click(function() {
-						configuration.play = false;
-					});
-
-					$('#resetLabelsBtn').click(function() {
-						visualisation.getLabels().length = 0;
-					});
-
-					// connect to OOCSI server
-					@if(secure) {
-						OOCSI.connect("wss://" + window.location.host + "/ws");	
+				  p.rotateText = function() {
+					if(configuration.play) {
+						p.rotateZ(-p.radians(p.frameCount/80.));
+						p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, 40, 60)));
 					} else {
-						OOCSI.connect("ws://" + window.location.host + "/ws");
+						p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, -5, 5)));
+					}
+				  }
+
+				  p.mousePressed = function() {
+
+				  	if(mx < -BASEPLATE_WIDTH/2 || mx > BASEPLATE_WIDTH/2 || my < -BASEPLATE_HEIGHT/2 || my > BASEPLATE_HEIGHT/2) {
+				  		return true;
+				  	}
+
+				  	var label = window.prompt("Provide a new label: ");
+				  	if(label) {
+					  	labels.push({
+					  		text: label,
+					  		x: mx,
+					  		y: my
+					  	});
+				  	}
+				  };
+
+				  p.setClient = function(text, x, y) {
+					myself.text = text;
+					myself.x = -p.width/2 + p.map(x, 0, p.width, 0, BASEPLATE_WIDTH);
+					myself.y = -p.height/2 + p.map(y, 0, p.height, 0, BASEPLATE_HEIGHT);
+				  };
+
+				  p.updateClient = function(text, x, y) {
+					var client = p.findClient(text);
+					if(client) {
+						if(x > -1) {
+							client.x = -p.width/2 + p.map(x, 0, p.width, 0, BASEPLATE_WIDTH);
+							client.y = -p.height/2 + p.map(y, 0, p.height, 0, BASEPLATE_HEIGHT);
+						}
+						return;
 					}
 
-					setTimeout(subscribe, 200);
-					
-					function subscribe() {
+				  	// if no client found, add new
+				  	clients.push({
+				  		text: text,
+				  		x: -p.width/2 + p.random(330, BASEPLATE_WIDTH),
+						y: -p.height/2 + 100
+				  	});
+				  };
+
+				  p.updateChannel = function(text) {
+				  	var channel = p.findClient(text, channels);
+					if(!channel) {
+					  	channel = {
+					  		text: text,
+					  		x: 0,
+							y: 0,
+							vx: p.random(-2, 2),
+							vy: p.random(-2, 2)
+					  	};
+					  	channels.push(channel);
+					}
+				  	return channel;
+				  };
+
+				  p.findClient = function(text, listIn) {
+				  	let list = listIn || clients;
+				  	for(clntIdx in list) {
+				  		let client = list[clntIdx];
+				  		if(client.text == text) {
+				  			return client;
+						}
+					}
+					return undefined;
+				  };
+
+				  p.addEvent = function(src, dst, ch) {
+				  	if(events.length < 30) {
+					  let source = p.findClient(src);
+					  let destination = p.findClient(dst);
+
+					  if(source && destination) {
 						
-						if (!OOCSI.isConnected()) {
-							setTimeout(subscribe, 200);
-							return;		
+						// check channel
+						var channel = undefined;
+						if(ch && ch.length > 0) {
+						channel = p.updateChannel(ch);
 						}
 
-						$('.progress').hide();
+					  	events.push({
+					  		x: source.x,
+					  		y: source.y,
+					  		sx: source.x,
+					  		sy: source.y,
+					  		cx: channel ? channel.x : -1,
+					  		cy: channel ? channel.y : -1,
+					  		dx: destination.x,
+					  		dy: destination.y,
+					  		ttl: channel ? 200 : 100
+					  	});
+					  }
+				  	}
+				  };
 
-						OOCSI.subscribe("OOCSI_events", function(msg) {
-							// first discovery
-							if(visualisation.findClient(msg.data.SUB)) {
-								visualisation.updateClient(msg.data.PUB, -1, -1);
-							}
-							if(visualisation.findClient(msg.data.PUB)) {
-								visualisation.updateClient(msg.data.SUB, -1, -1);
-							}
+				  p.getLabels = function() {
+				  	return labels;
+				  };
 
-							visualisation.addEvent(msg.data.PUB, msg.data.SUB, msg.data.CHANNEL);
-						});
-
-						OOCSI.subscribe("@token", function(msg) {
-							if(msg.data.client && msg.data.client != configuration.client && msg.data.x && msg.data.y) {
-								if(visualisation.findClient(msg.data.client)) {
-									visualisation.updateClient(msg.data.client, msg.data.x, msg.data.y);
-								}
-							} else if(msg.data.label && msg.data.x && msg.data.y) {
-								visualisation.addLabel(msg.data.label, msg.data.x, msg.data.y);
-							}
-						});
-
-						setInterval(function() {
-							OOCSI.send("@token", {client: configuration.client, x: configuration.x, y: configuration.y});
-						}, 1000);
-
-						setInterval(function() {
-							let labels = visualisation.getLabels();
-							if(labels.length > 0) {
-								let index = visualisation.round(visualisation.random(0, labels.length - 1));
-								OOCSI.send("@token", {label: labels[index].text, x: labels[index].x, y: labels[index].y});
-							}
-						}, 2300);
-
-						$('#connectionBtn').click();
+				  p.addLabel = function(text, x, y) {
+					for(clntIdx in externalLabels) {
+				  		let label = externalLabels[clntIdx];
+				  		if(label.text == text) {
+				  			label.x = x;
+				  			label.y = y;
+				  			label.ttl = 10000;
+				  			return;
+						}
 					}
 
+					externalLabels.push({
+						text: text,
+						x: x,
+						y: y,
+			  			ttl: 10000
+					});
+				  };
+
+				};
+
+				let visualisation = new p5(s, 'canvas');
+
+				///////////////////////////////////////////////////////////////////
+
+				var configuration = {
+					client: "",
+					x : 0,
+					y: 0,
+					play: false,
+					speed: 3600
+				};
+
+				$('#oocsi_client,#xpos,#ypos').change(function() {
+					visualisation.setClient($('#oocsi_client').val(), $('#xpos').val(), $('#ypos').val());
+					configuration.client = $('#oocsi_client').val();
+					configuration.x = $('#xpos').val();
+					configuration.y = $('#ypos').val();						
 				});
 
-			</script>
+				$('.modal').modal();
+
+				$('#playBtn').click(function() {
+					configuration.play = true;
+				});
+				$('#pauseBtn').click(function() {
+					configuration.play = false;
+				});
+
+				$('#resetLabelsBtn').click(function() {
+					visualisation.getLabels().length = 0;
+				});
+
+				// connect to OOCSI server
+				@if(secure) {
+					OOCSI.connect("wss://" + window.location.host + "/ws");	
+				} else {
+					OOCSI.connect("ws://" + window.location.host + "/ws");
+				}
+
+				setTimeout(subscribe, 200);
+				
+				function subscribe() {
+					
+					if (!OOCSI.isConnected()) {
+						setTimeout(subscribe, 200);
+						return;		
+					}
+
+					$('.progress').hide();
+
+					OOCSI.subscribe("OOCSI_events", function(msg) {
+						// first discovery
+						if(visualisation.findClient(msg.data.SUB)) {
+							visualisation.updateClient(msg.data.PUB, -1, -1);
+						}
+						if(visualisation.findClient(msg.data.PUB)) {
+							visualisation.updateClient(msg.data.SUB, -1, -1);
+						}
+
+						visualisation.addEvent(msg.data.PUB, msg.data.SUB, msg.data.CHANNEL);
+					});
+
+					OOCSI.subscribe("@token", function(msg) {
+						if(msg.data.client && msg.data.client != configuration.client && msg.data.x && msg.data.y) {
+							if(visualisation.findClient(msg.data.client)) {
+								visualisation.updateClient(msg.data.client, msg.data.x, msg.data.y);
+							}
+						} else if(msg.data.label && msg.data.x && msg.data.y) {
+							visualisation.addLabel(msg.data.label, msg.data.x, msg.data.y);
+						}
+					});
+
+					setInterval(function() {
+						OOCSI.send("@token", {client: configuration.client, x: configuration.x, y: configuration.y});
+					}, 1000);
+
+					setInterval(function() {
+						let labels = visualisation.getLabels();
+						if(labels.length > 0) {
+							let index = visualisation.round(visualisation.random(0, labels.length - 1));
+							OOCSI.send("@token", {label: labels[index].text, x: labels[index].x, y: labels[index].y});
+						}
+					}, 2300);
+
+					$('#connectionBtn').click();
+				}
+
+			});
+
+		</script>
     </body>
 </html>
