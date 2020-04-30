@@ -93,6 +93,7 @@
 				  let clients = [myself];
 				  let channels = [];
 				  let labels = [];
+				  let labelSubscriptions = {};
 				  let externalLabels = [];
 				  var events = [];
 				  let BASEPLATE_WIDTH = 600 * 1.333;
@@ -166,12 +167,21 @@
 					labels.forEach(function(d, i) {
 						p.push();
 						p.translate(d.x, d.y, 1);
-						p.fill(110);
-						p.stroke(110);
 						p.ellipse(0, 0, 5, 5);
+						p.stroke(110);
 						p.line(0, 0, 0, 0, 0, 20);
 						p.translate(0, 0, 30);
 						p.rotateText();
+						if(d.min != d.max && d.ttl-- > 0) {
+							p.rectMode(p.CORNER);
+							p.noStroke();
+							p.fill(120);
+							p.rect(0, 7, 100, 1);
+							p.fill(255-p.map(d.val, d.min, d.max, 140, 0), 0, 255-p.map(d.val, d.min, d.max, 0, 140));
+							p.rect(0, 4, p.map(d.val, d.min, d.max, 1, 100), 3);
+						}
+						p.fill(10);
+						p.stroke(110);
 						p.text(d.text, 0, 0);
 						p.pop();
 					});
@@ -298,11 +308,40 @@
 
 				  	var label = window.prompt("Provide a new label: ");
 				  	if(label) {
-					  	labels.push({
-					  		text: label,
-					  		x: mx,
-					  		y: my
-					  	});
+				  		if(/[@@][A-Za-z0-9-_]+[:][A-Za-z0-9-_]+/g.test(label)) {
+						  	let updatablelabel = {
+								text: label,
+								x: mx,
+								y: my,
+								min: 0,
+								max: 0,
+								val: 0,
+								ttl: 3000
+							};
+						  	labels.push(updatablelabel);
+						  	var channel = /[@@]([A-Za-z0-9-_]+)[:]/g.exec(label)[1];
+						  	var item = /[@@][A-Za-z0-9-_]+[:]([A-Za-z0-9-_]+)/g.exec(label)[1];
+						  	if(!labelSubscriptions[channel]) {
+						  		labelSubscriptions[channel] = [];
+							  	OOCSI.subscribe(channel, function(e) {
+							  		labelSubscriptions[channel].forEach(function(d) {
+							  			d(e);
+							  		});
+							  	});
+						  	}
+						  	labelSubscriptions[channel].push(function(e) {
+						  		updatablelabel.val = e.data[item];
+						  		updatablelabel.min = p.min(updatablelabel.val, updatablelabel.min);
+						  		updatablelabel.max = p.max(updatablelabel.val, updatablelabel.max);
+						  		updatablelabel.ttl = 3000;
+						  	});
+				  		} else {
+						  	labels.push({
+								text: label,
+								x: mx,
+								y: my
+							});
+						}
 				  	}
 				  };
 
