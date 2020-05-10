@@ -1,4 +1,4 @@
-@(message: String, title: String, address: String, secure: Boolean) 
+@(message: String, title: String, address: String) 
 
 @charts("OOCSI Server Metrics") { 
 
@@ -23,12 +23,8 @@
     	
 	   	$(document).ready(function(){
 	        // connect to OOCSI server running on IP
-			@if(secure) {
-				OOCSI.connect("wss://" + window.location.host + "/ws");	
-			} else{
-				OOCSI.connect("ws://" + window.location.host + "/ws");
-			}
-
+			OOCSI.connect((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
+			
 			// add charts			
 			addChart('OOCSI_metrics', 'messages');
 			addChart('OOCSI_metrics', 'clients');

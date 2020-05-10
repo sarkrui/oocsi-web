@@ -1,4 +1,4 @@
-@(message: String, title: String, address: String, secure: Boolean, clients: String, channels: String) 
+@(message: String, title: String, address: String, clients: String, channels: String) 
 
 @main("Welcome to OOCSI") {
 
@@ -216,14 +216,8 @@
 	   			$(this).html($(this).html().replace("ADDRESS", window.location.hostname));
 	   		});
 
-
-
 			// connect to OOCSI server
-			@if(secure) {
-				OOCSI.connect("wss://" + window.location.host + "/ws");	
-			} else{
-				OOCSI.connect("ws://" + window.location.host + "/ws");
-			}
+			OOCSI.connect((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
 
 			OOCSI.subscribe("OOCSI_metrics", function(e) {
 				$("#livemetrics")

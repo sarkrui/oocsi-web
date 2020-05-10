@@ -87,8 +87,7 @@ public class Application extends Controller {
 			clients = clients.substring(0, 160) + "...";
 		}
 
-		return ok(views.html.Application.index.render("index", "", request().host(), environment.isProd(), clients,
-				channels));
+		return ok(views.html.Application.index.render("index", "", request().host(), clients, channels));
 	}
 
 	/**
@@ -97,7 +96,7 @@ public class Application extends Controller {
 	 * @return
 	 */
 	public Result metrics() {
-		return ok(views.html.Application.metrics.render("metrics", "", request().host(), environment.isProd()));
+		return ok(views.html.Application.metrics.render("metrics", "", request().host()));
 	}
 
 	/**
@@ -106,7 +105,7 @@ public class Application extends Controller {
 	 * @return
 	 */
 	public Result network() {
-		return ok(views.html.Application.network.render("network", "", request().host(), environment.isProd()));
+		return ok(views.html.Application.network.render("network", "", request().host()));
 	}
 
 	/**

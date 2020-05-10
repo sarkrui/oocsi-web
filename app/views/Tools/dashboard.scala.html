@@ -1,4 +1,4 @@
-@(message: String, title: String, address: String, secure: Boolean) 
+@(message: String, title: String, address: String) 
 
 @charts("OOCSI Dashboard") { 
 
@@ -49,11 +49,7 @@
 			$('.modal').modal();
 
 			// connect to OOCSI server
-			@if(secure) {
-				OOCSI.connect("wss://" + window.location.host + "/ws");	
-			} else{
-				OOCSI.connect("ws://" + window.location.host + "/ws");
-			}
+			OOCSI.connect((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
 
 			// add charts
 			var json = readCookie('charts');
@@ -164,7 +160,7 @@
 			}
 			
 			// truncate data to max length
-			while(chartData.length > 500) {
+			while(chartData.length > 200) {
 				chartData.shift();
 			}
 			

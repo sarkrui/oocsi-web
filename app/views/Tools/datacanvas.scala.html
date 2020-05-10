@@ -1,4 +1,4 @@
-@(message: String, token: String, address: String, secure: Boolean) 
+@(message: String, token: String, address: String) 
 
 <!DOCTYPE html>
 <html lang="en">
@@ -481,12 +481,8 @@
 				});
 
 				// connect to OOCSI server
-				@if(secure) {
-					OOCSI.connect("wss://" + window.location.host + "/ws");	
-				} else {
-					OOCSI.connect("ws://" + window.location.host + "/ws");
-				}
-
+				OOCSI.connect((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
+				
 				setTimeout(subscribe, 200);
 				
 				function subscribe() {
