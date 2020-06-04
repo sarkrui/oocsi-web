@@ -104,6 +104,7 @@
 				  var my;
 				  var rotX = 0;
 				  var rotZ = 0;
+				  var frameCounter = 0;
 
 				  p.preload = function() {
 					svg = p.loadImage("/assets/images/sandbox_gs_f.svg");
@@ -119,12 +120,13 @@
 				  };
 
 				  p.draw = function() {
+				  	frameCounter++;
 				    p.background(255);
 
 				    // global rotation
 				    if(configuration.play) {
 						rotX += (p.radians(p.map(p.mouseY, 0, p.height, 40, 60)) - rotX)/20;
-					    rotZ += (p.radians((p.frameCount/80.) % 360) - rotZ)/20;
+					    rotZ += (p.radians((frameCounter/80.) % 360) - rotZ)/20;
 					} else {
 						rotX += (p.radians(p.map(p.mouseY, 0, p.height, -5, 5)) - rotX)/20;
 						rotZ += (-rotZ)/20;
@@ -201,6 +203,9 @@
 						}
 					});
 					clients.forEach(function(d, i) {
+						// if(d.x < -1 && d.y < -1) {
+						// 	return;
+						// }
 						p.push();
 						p.translate(d.x, d.y, 1);
 						p.fill(200, 0, 0);
@@ -257,8 +262,8 @@
 								p.translate(d.x, d.y, ele);
 								p.sphere(6);
 								p.pop();
-								p.stroke(200, 20);
-								p.line(d.sx, d.sy, 120, d.dx, d.dy, 100);
+								// p.stroke(200, 20);
+								// p.line(d.sx, d.sy, 120, d.dx, d.dy, 100);
 							} else if(d.cx != -1) {
 								d.x += (d.dx - d.cx)/100;
 								d.y += (d.dy - d.cy)/100;
@@ -269,8 +274,8 @@
 								p.translate(d.x, d.y, ele);
 								p.sphere(4);
 								p.pop();
-								p.stroke(200, 20);
-								p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
+								// p.stroke(200, 20);
+								// p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
 							} else {								
 								d.x += (d.dx - d.sx)/100;
 								d.y += (d.dy - d.sy)/100;
@@ -281,8 +286,8 @@
 								p.translate(d.x, d.y, ele);
 								p.sphere(4);
 								p.pop();
-								p.stroke(200, 20);
-								p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
+								// p.stroke(200, 20);
+								//p.line(d.sx, d.sy, 120, d.dx, d.dy, 120);
 							}
 
 							respawnedEvents.push(d);
@@ -293,11 +298,15 @@
 
 				  p.rotateText = function() {
 					if(configuration.play) {
-						p.rotateZ(-p.radians(p.frameCount/80.));
+						p.rotateZ(-p.radians(frameCounter/80.));
 						p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, 40, 60)));
 					} else {
 						p.rotateX(-p.radians(p.map(p.mouseY, 0, p.height, -5, 5)));
 					}
+				  }
+
+				  p.mouseDragged = function() {
+				  	frameCounter += p.map(p.mouseX-p.pmouseX, 0, 10, 0, 100);
 				  }
 
 				  p.mousePressed = function() {
@@ -352,6 +361,10 @@
 				  };
 
 				  p.updateClient = function(text, x, y) {
+					if(text == '?') {
+						return;
+					}
+
 					var client = p.findClient(text);
 					if(client) {
 						if(x > -1) {
@@ -461,10 +474,18 @@
 				};
 
 				$('#oocsi_client,#xpos,#ypos').change(function() {
-					visualisation.setClient($('#oocsi_client').val(), $('#xpos').val(), $('#ypos').val());
-					configuration.client = $('#oocsi_client').val();
-					configuration.x = $('#xpos').val();
-					configuration.y = $('#ypos').val();						
+					let client = $('#oocsi_client').val();
+					let x = $('#xpos').val();
+					let y = $('#ypos').val();
+
+					if(client.length > 0 && x.length == 0 & y.length == 0) {
+						visualisation.updateClient(client, -1, -1);
+					} else {
+						visualisation.setClient(client, x, y);
+						configuration.client = client;
+						configuration.x = x;
+						configuration.y = y;
+					}
 				});
 
 				$('.modal').modal();
@@ -495,12 +516,11 @@
 					$('.progress').hide();
 
 					OOCSI.subscribe("OOCSI_events", function(msg) {
-						// first discovery
-						if(visualisation.findClient(msg.data.SUB)) {
-							visualisation.updateClient(msg.data.PUB, -1, -1);
-						}
 						if(visualisation.findClient(msg.data.PUB)) {
 							visualisation.updateClient(msg.data.SUB, -1, -1);
+						}
+						if(visualisation.findClient(msg.data.SUB)) {
+							visualisation.updateClient(msg.data.PUB, -1, -1);
 						}
 
 						visualisation.addEvent(msg.data.PUB, msg.data.SUB, msg.data.CHANNEL);
@@ -517,7 +537,9 @@
 					});
 
 					setInterval(function() {
-						OOCSI.send("@token", {client: configuration.client, x: configuration.x, y: configuration.y});
+						if(configuration.x > -1 && configuration.y > -1) {
+							OOCSI.send("@token", {client: configuration.client, x: configuration.x, y: configuration.y});
+						}
 					}, 1000);
 
 					setInterval(function() {
