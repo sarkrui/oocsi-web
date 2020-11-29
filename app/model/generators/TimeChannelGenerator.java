@@ -1,7 +1,8 @@
 package model.generators;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 import akka.actor.ActorSystem;
@@ -30,14 +31,21 @@ public class TimeChannelGenerator {
 
 	private void initialize() {
 		this.actorSystem.scheduler().schedule(Duration.create(2, TimeUnit.SECONDS),
-				Duration.create(1, TimeUnit.SECONDS), () -> publish(), this.executionContext);
+		        Duration.create(1, TimeUnit.SECONDS), () -> publish(), this.executionContext);
 	}
 
 	private void publish() {
 		Message m = new Message("SERVER", CHANNEL);
 
-		m.addData("timestamp", System.currentTimeMillis());
-		m.addData("datetime", sdf.format(new Date()));
+		final Calendar cal = new GregorianCalendar();
+		m.addData("y", cal.get(Calendar.YEAR));
+		m.addData("M", cal.get(Calendar.MONTH));
+		m.addData("d", cal.get(Calendar.DAY_OF_MONTH));
+		m.addData("h", cal.get(Calendar.HOUR_OF_DAY));
+		m.addData("m", cal.get(Calendar.MINUTE));
+		m.addData("s", cal.get(Calendar.SECOND));
+		m.addData("timestamp", cal.getTimeInMillis());
+		m.addData("datetime", sdf.format(cal.getTime()));
 
 		Channel channel = server.getChannel(CHANNEL);
 		if (channel != null) {
