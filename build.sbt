@@ -1,7 +1,7 @@
 name := """oocsi-web"""
 organization := "IndustrialDesign"
 
-version := "0.3.12"
+version := "0.3.13"
 
 maintainer := "m.funk@tue.nl"
 
@@ -11,7 +11,9 @@ scalaVersion := "2.12.10"
 
 libraryDependencies ++= Seq(
   guice,
-  javaWs
+  javaWs,
+  
+  "com.google.code.gson" % "gson" % "2.8.6"
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava, LauncherJarPlugin)

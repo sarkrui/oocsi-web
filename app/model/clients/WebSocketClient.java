@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Semaphore;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -26,6 +27,7 @@ public class WebSocketClient extends Client {
 
 	private OOCSIServer server;
 	private WebSocketClientActor output;
+	private Semaphore pingQueue = new Semaphore(10);
 
 	public WebSocketClient(String token, OOCSIServer server, WebSocketClientActor out) {
 		super(token, server.getChangeListener());
@@ -162,6 +164,7 @@ public class WebSocketClient extends Client {
 			}
 		} else {
 			// ignore all other messages, do nothing
+			pong();
 		}
 
 		// update last action
@@ -170,9 +173,14 @@ public class WebSocketClient extends Client {
 
 	@Override
 	public void ping() {
-		if (output != null) {
+		if (output != null && pingQueue.tryAcquire()) {
 			output.tell("ping");
 		}
+	}
+
+	@Override
+	public void pong() {
+		pingQueue.release();
 	}
 
 	@Override

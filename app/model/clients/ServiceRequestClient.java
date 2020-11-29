@@ -26,10 +26,17 @@ public class ServiceRequestClient extends Client {
 
 	@Override
 	public void disconnect() {
+		// do nothing
 	}
 
 	@Override
 	public void ping() {
+		// do nothing
+	}
+
+	@Override
+	public void pong() {
+		// do nothing
 	}
 
 	public boolean completed() {

@@ -32,6 +32,11 @@ public class EchoClient extends Client {
 	}
 
 	@Override
+	public void pong() {
+		// do nothing
+	}
+
+	@Override
 	public void send(Message event) {
 		if (validate(event.recipient)) {
 			Message m = new Message("SERVER", event.sender);
