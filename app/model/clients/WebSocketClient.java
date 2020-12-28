@@ -168,7 +168,7 @@ public class WebSocketClient extends Client {
 		}
 
 		// update last action
-		lastAction = System.currentTimeMillis();
+		this.touch();
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package model.clients;
 
 import nl.tue.id.oocsi.server.OOCSIServer;
+import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.model.Client;
 import nl.tue.id.oocsi.server.protocol.Message;
 
@@ -12,7 +13,6 @@ public class EchoClient extends Client {
 		super(token, server.getChangeListener());
 
 		this.server = server;
-
 		server.addClient(this);
 	}
 
@@ -37,11 +37,22 @@ public class EchoClient extends Client {
 	}
 
 	@Override
+	public long lastAction() {
+		return System.currentTimeMillis();
+	}
+
+	@Override
 	public void send(Message event) {
 		if (validate(event.recipient)) {
-			Message m = new Message("SERVER", event.sender);
+			Message m = new Message("echo", event.sender);
 			m.data.putAll(event.data);
-			server.send(m);
+			Channel c = server.getChannel(event.sender);
+			if (c != null) {
+				c.send(m);
+
+				// log access
+				OOCSIServer.logEvent(token, "", event.sender, event.data, event.timestamp);
+			}
 		}
 	}
 
