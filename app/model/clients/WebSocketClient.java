@@ -147,7 +147,7 @@ public class WebSocketClient extends Client {
 					}
 				} catch (Exception e) {
 					// outputStream.write("ERROR: parse exception");
-					Logger.warn("JSON parse exception");
+					Logger.warn("JSON parse exception", e);
 				}
 			}
 		} else if (inputLine.startsWith("subscribe")) {

@@ -5,10 +5,12 @@ import com.google.inject.Singleton;
 
 import akka.actor.ActorSystem;
 import model.clients.EchoClient;
+import model.clients.HTTPRequestClient;
 import model.generators.TestChannelGenerator;
 import model.generators.TimeChannelGenerator;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import play.Environment;
+import play.libs.ws.WSClient;
 import play.mvc.Controller;
 import play.mvc.Result;
 import scala.concurrent.ExecutionContext;
@@ -19,11 +21,15 @@ public class Tutorial extends Controller {
 	private Environment environment;
 
 	@Inject
-	public Tutorial(Environment environment, OOCSIServer server, ActorSystem system, ExecutionContext ectx) {
+	public Tutorial(Environment environment, OOCSIServer server, ActorSystem system, ExecutionContext ectx,
+	        WSClient wsClient) {
 		this.environment = environment;
 
 		// start client
 		new EchoClient("echo", server);
+
+		// start HTTP request client, inject ws client
+		new HTTPRequestClient("http-web-request", server, wsClient);
 
 		// start generators
 		new TestChannelGenerator(server, system, ectx);

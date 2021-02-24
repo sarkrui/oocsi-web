@@ -2,10 +2,12 @@ package controllers;
 
 import static akka.pattern.Patterns.ask;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
@@ -45,7 +47,7 @@ public class Application extends Controller {
 
 	@Inject
 	public Application(ActorSystem as, Materializer m, ApplicationLifecycle lifecycle, FormFactory f, Environment env,
-			OOCSIServer server, Config configuration) {
+	        OOCSIServer server, Config configuration) {
 
 		this.system = as;
 		this.materializer = m;
@@ -77,7 +79,7 @@ public class Application extends Controller {
 	 */
 	public Result index() {
 		String channels = server.getChannelList().replace("OOCSI_connections,", "").replace("OOCSI_clients,", "")
-				.replace("OOCSI_events,", "").replace("OOCSI_metrics,", "").replace("OSC,", "");
+		        .replace("OOCSI_events,", "").replace("OOCSI_metrics,", "").replace("OSC,", "");
 		if (channels.length() > 160) {
 			channels = channels.substring(0, 160) + "...";
 		}
@@ -158,7 +160,7 @@ public class Application extends Controller {
 	 */
 	public WebSocket ws() {
 		return WebSocket.Text.accept(
-				request -> ActorFlow.actorRef(out -> WebSocketClientActor.props(out, server), system, materializer));
+		        request -> ActorFlow.actorRef(out -> WebSocketClientActor.props(out, server), system, materializer));
 	}
 
 	/**
@@ -223,20 +225,41 @@ public class Application extends Controller {
 	 * @return
 	 */
 	public Result send(String channel) {
-		DynamicForm dynamicForm = formFactory.form().bindFromRequest();
-
-		// check server available
-		String sender = dynamicForm.get("sender");
-		if (sender == null || sender.trim().isEmpty()) {
-			return badRequest("ERROR: sender missing");
-		}
 
 		// // check channel available
 		if (channel == null || channel.trim().isEmpty()) {
 			return badRequest("ERROR: channel missing");
 		}
 
-		return internalSend(sender, channel, dynamicForm.rawData());
+		String sender;
+		JsonNode jn = request().body().asJson();
+		if (jn != null) {
+			JsonNode sjn = jn.get("sender");
+			if (sjn != null) {
+				sender = sjn.asText();
+			} else {
+				return badRequest("ERROR: sender missing");
+			}
+
+			// convert to Map
+			Map<String, String> map = new HashMap<>();
+			jn.fields().forEachRemaining(i -> {
+				map.put(i.getKey(), i.getValue().asText());
+			});
+
+			return internalSend(sender, channel, map);
+		} else {
+			DynamicForm dynamicForm = formFactory.form().bindFromRequest();
+
+			// check server available
+			sender = dynamicForm.get("sender");
+			if (sender == null || sender.trim().isEmpty()) {
+				return badRequest("ERROR: sender missing");
+			}
+
+			return internalSend(sender, channel, dynamicForm.rawData());
+		}
+
 	}
 
 	/**
@@ -263,7 +286,7 @@ public class Application extends Controller {
 			// fill message
 			for (String key : messageData.keySet()) {
 				if (!key.equals("sender") || !key.equals("channel") || !key.equals("recipient")
-						|| !key.equals("timestamp") || !key.equals("")) {
+				        || !key.equals("timestamp") || !key.equals("")) {
 					message.addData(key, messageData.get(key));
 				}
 			}
@@ -333,38 +356,38 @@ public class Application extends Controller {
 	private CompletionStage<Result> internalServiceCall(String service, String call, String data) {
 		final ActorRef a = system.actorOf(ServiceClientActor.props(server));
 		CompletionStage<Result> prom = FutureConverters
-				.toJava(ask(a, new ServiceClientActor.ServiceRequest(service, call, data), 5000))
-				.thenApply(response -> {
+		        .toJava(ask(a, new ServiceClientActor.ServiceRequest(service, call, data), 5000))
+		        .thenApply(response -> {
 
-					// kill actor
-					a.tell(PoisonPill.getInstance(), a);
+			        // kill actor
+			        a.tell(PoisonPill.getInstance(), a);
 
-					if (response == null) {
-						return noContent();
-					} else {
-						Map<String, Object> messageData = ((Message) response).data;
-						if (messageData.containsKey("html"))
-							return ok((String) messageData.get("html")).as("text/html")
-									.withHeader("Access-Control-Allow-Origin", "*")
-									.withHeader("Access-Control-Allow-Headers", "X-Requested-With")
-									.withHeader("Access-Control-Allow-Headers", "Content-Type")
-									.withHeader("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
-						else if (messageData.containsKey("text"))
-							return ok((String) messageData.get("text")).as("text/plain");
-						else if (messageData.containsKey("json"))
-							return ok((String) messageData.get("json")).as("text/json");
-						else if (messageData.containsKey("csv"))
-							return ok((String) messageData.get("csv")).as("text/csv");
-						else
-							return ok();
-					}
-				}).exceptionally(e -> {
+			        if (response == null) {
+				        return noContent();
+			        } else {
+				        Map<String, Object> messageData = ((Message) response).data;
+				        if (messageData.containsKey("html"))
+					        return ok((String) messageData.get("html")).as("text/html")
+					                .withHeader("Access-Control-Allow-Origin", "*")
+					                .withHeader("Access-Control-Allow-Headers", "X-Requested-With")
+					                .withHeader("Access-Control-Allow-Headers", "Content-Type")
+					                .withHeader("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
+				        else if (messageData.containsKey("text"))
+					        return ok((String) messageData.get("text")).as("text/plain");
+				        else if (messageData.containsKey("json"))
+					        return ok((String) messageData.get("json")).as("text/json");
+				        else if (messageData.containsKey("csv"))
+					        return ok((String) messageData.get("csv")).as("text/csv");
+				        else
+					        return ok();
+			        }
+		        }).exceptionally(e -> {
 
-					// kill actor
-					a.tell(PoisonPill.getInstance(), a);
+			        // kill actor
+			        a.tell(PoisonPill.getInstance(), a);
 
-					return notFound(service + " not found");
-				});
+			        return notFound(service + " not found");
+		        });
 		return prom;
 	}
 }
