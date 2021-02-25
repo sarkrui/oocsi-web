@@ -150,7 +150,7 @@ var OOCSI = (function() {
 		connect: function(server, clientName, fn) {
 			wsUri = server;
 			username = clientName && clientName.length > 0 ? clientName : "webclient_" + +(new Date());
-			handlers[clientName] = fn;
+			handlers[username] = fn;
 			init();
 		},
 		send: function(recipient, data) {

@@ -2,6 +2,7 @@ package model.clients;
 
 import java.util.concurrent.CompletionStage;
 
+import nl.tue.id.oocsi.client.services.OOCSICall;
 import nl.tue.id.oocsi.server.OOCSIServer;
 import nl.tue.id.oocsi.server.model.Channel;
 import nl.tue.id.oocsi.server.model.Client;
@@ -114,6 +115,10 @@ public class HTTPRequestClient extends Client {
 					m.data.put("result-status", response.getStatus());
 					m.data.put("result-body", response.getBody());
 					m.data.put("result-content-type", response.getContentType());
+					if (event.data.containsKey(OOCSICall.MESSAGE_ID)) {
+						m.data.put(OOCSICall.MESSAGE_ID, event.data.get(OOCSICall.MESSAGE_ID));
+					}
+
 					Channel c = server.getChannel(event.sender);
 					if (c != null) {
 						c.send(m);

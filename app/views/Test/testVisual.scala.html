@@ -15,16 +15,21 @@
 			</p>
 		</div>
 
-		<div class="col s12 m5 card">
-			<h6>Subscribe and receive data</h6>
-			<div class="input-field">
-				<input id="c1_channel" type="text" name="c1_channel">
-				<label for="c1_channel">Channel name</label>
-				<a id="c1_subscribe" class="btn blue">Subscribe</a>
-				<a id="c1_unsubscribe" class="btn red">Unsubscribe</a>
-				<a id="c1_clear" class="btn grey">Clear</a>
+		<div class="col s12 m5">
+			<div class="col s12 card">
+				<h6>Subscribe and receive data</h6>
+				<div class="input-field">
+					<input id="c1_channel" type="text" name="c1_channel">
+					<label for="c1_channel">Channel name</label>
+					<a id="c1_subscribe" class="btn blue">Subscribe</a>
+					<a id="c1_unsubscribe" class="btn red">Unsubscribe</a>
+					<a id="c1_clear" class="btn grey">Clear</a>
+				</div>
+				<div id="c1_results" style="padding: 1em 0; height: 37em; overflow: scroll;"></div>
 			</div>
-			<div id="c1_results" style="padding: 1em; height: 20em; overflow: scroll;"></div>
+			<small>
+				Note that you cannot receive (left) on the channel that you send stuff out (right). To do that you need a second client. Open a second a tab with this <a href="@routes.Tools.testVisual()" target="_blank">link</a> and you are good to go.
+			</small>
 		</div>
 
 		<div class="col s12 m5 offset-m1 card">
@@ -32,14 +37,19 @@
 			<div class="input-field">
 				<input id="c2_channel" type="text" name="c2_channel">
 				<label for="c2_channel">Channel name</label>
-				<textarea id="c2_data" class="materialize-textarea" style="height: 20em; font-family: monospace;">{"number": 123, "text": "content", "boolean": true}</textarea>
+				<textarea id="c2_data" class="materialize-textarea" style="height: 10em; font-family: monospace;">{"number": 123, "text": "content", "boolean": true}</textarea>
 				<a id="c2_send" class="btn blue">Send</a>
+				<a id="c2_clear" class="btn grey">Clear responses</a>
+				<div class="input-field">
+			     	<label>
+						<input id="sendAsCall" type="checkbox" />
+						<span>Send as a call</span>
+					</label>
+				</div>
 			</div>
+			<div id="c2_results" style="margin-top: 4em; padding: 1em 0; height: 30em; overflow: scroll;"></div>
 		</div>
 
-		<div class="col s12">
-			<small>Note that you cannot receive (left) on the channel that you send stuff out (right). To do that you need a second client. Open a second a tab with this <a href="@routes.Tools.testVisual()" target="_blank">link</a> and you are good to go.</small>
-		</div>
 	</div>
 </div>
 
@@ -49,7 +59,9 @@
 	// setup
 	// --------------------------------------------------------------------
 	// connect to OOCSI server running on IP
-	OOCSI.connect((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws');
+	OOCSI.connect((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws', undefined, function(e) {
+			$('#c2_results').append('<p>' + JSON.stringify(e.data) + '</p>');
+	});
 
 	$('#c1_subscribe').click(function(e) {
 		let channelName = $('#c1_channel').val();
@@ -70,7 +82,14 @@
 	});
 
 	$('#c1_clear').click(function(e) {
-		$('#c1_results *').remove();
+		$('#c1_results').empty();
+
+		e.preventDefault();
+		return false;
+	});
+	
+	$('#c2_clear').click(function(e) {
+		$('#c2_results').empty();
 
 		e.preventDefault();
 		return false;
@@ -79,7 +98,16 @@
 	$('#c2_send').click(function(e) {
 		let channelName = $('#c2_channel').val();
 		let data = $('#c2_data').val();
-		OOCSI.send(channelName, JSON.parse(data));
+
+		// normal send
+		if($('#sendAsCall:checked').length == 0) {
+			OOCSI.send(channelName, JSON.parse(data));
+		} else {
+			OOCSI.call(channelName, JSON.parse(data), 2000, function(data) {
+				console.log(e);
+				$('#c2_results').append('<p>' + JSON.stringify(data) + '</p>');
+			});
+		}
 
 		e.preventDefault();
 		return false;
