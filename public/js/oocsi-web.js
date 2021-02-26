@@ -6,25 +6,16 @@ var OOCSI = (function() {
 	var responders = {};
 	var calls = {};
 	var websocket;
-	// var connected = false;
 	var logger = internalLog;
 	var error = internalError;
 
 	function init() {
 		logger("CONNECTING to "  + wsUri);
 		websocket = new WebSocket(wsUri);
-		websocket.onopen = function(evt) {
-			onOpen(evt)
-		};
-		websocket.onclose = function(evt) {
-			onClose(evt)
-		};
-		websocket.onmessage = function(evt) {
-			onMessage(evt)
-		};
-		websocket.onerror = function(evt) {
-			onError(evt)
-		};
+		websocket.onopen = onOpen;
+		websocket.onclose = onClose;
+		websocket.onmessage = onMessage;
+		websocket.onerror = onError;
 	}
 
 	function onOpen(evt) {
@@ -139,6 +130,19 @@ var OOCSI = (function() {
 		}
 	}
 
+	function internalReconnect() {
+		if(!internalConnected() && websocket.readyState !== WebSocket.CONNECTING) {
+			logger("RECONNECTING");
+			init();
+			// reconnect subscriptions
+			waitForSocket(function() {
+				for (const ch in handlers) {
+					submit('subscribe ' + ch);
+				}
+			});
+		}
+	}
+
 	function guid() {
 		function s4() {
 			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -152,6 +156,7 @@ var OOCSI = (function() {
 			username = clientName && clientName.length > 0 ? clientName : "webclient_" + +(new Date());
 			handlers[username] = fn;
 			init();
+			setInterval(internalReconnect, 1000);
 		},
 		send: function(recipient, data) {
 			waitForSocket(function() {
