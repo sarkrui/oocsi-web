@@ -21,7 +21,7 @@ public class EchoChannelTest extends WithServer {
 	@Test
 	public void testEchoChannel() throws InterruptedException {
 		OOCSICommunicator oco = new OOCSICommunicator(this, "in_need_of_echo");
-		oco.connect("127.0.0.1", 4444);
+		oco.connect("127.0.0.1", 8080);
 
 		assertTrue(oco.isConnected());
 		assertEquals(0, events.size());

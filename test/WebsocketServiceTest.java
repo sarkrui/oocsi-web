@@ -21,7 +21,7 @@ public class WebsocketServiceTest extends WithServer {
 	@Test
 	public void testServiceIndexAndServiceResponse() throws InterruptedException {
 		OOCSICommunicator oco = new OOCSICommunicator(this, "newService");
-		oco.connect("127.0.0.1", 4444);
+		oco.connect("127.0.0.1", 8080);
 
 		assertTrue(oco.isConnected());
 

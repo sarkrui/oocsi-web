@@ -15,7 +15,7 @@ public class Module extends AbstractModule {
 				os.destroyInstance();
 			}
 
-			bind(OOCSIServer.class).toInstance(new OOCSIServer(4444, 1000, true) {
+			bind(OOCSIServer.class).toInstance(new OOCSIServer(8080, 1000, true) {
 				@Override
 				protected void internalLog(String message) {
 					play.Logger.info(message);
